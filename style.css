@@ -1,0 +1,1014 @@
+:root {
+  --bg-dark: #020712;
+  --bg-mid: #08243c;
+  --panel: rgba(7, 28, 46, 0.95);
+  --panel-light: rgba(18, 61, 95, 0.96);
+
+  --text: #ffffff;
+  --muted: #dbeafe;
+
+  --blue: #38bdf8;
+  --orange: #fbbf24;
+  --green: #34d399;
+  --red: #fb7185;
+
+  --border: #5a86aa;
+  --shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  font-family: "Poppins", Arial, sans-serif;
+  color: var(--text);
+
+  background:
+    radial-gradient(
+      circle at 10% 10%,
+      rgba(56, 189, 248, 0.14),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(251, 191, 36, 0.12),
+      transparent 28%
+    ),
+    linear-gradient(
+      135deg,
+      var(--bg-dark),
+      var(--bg-mid)
+    );
+
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+strong {
+  font-family: "Montserrat", Arial, sans-serif;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body:not(.page-ready) .race-hero__content {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+body.page-ready .race-hero__content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* =========================================================
+   LANDING PAGE
+========================================================= */
+
+.landing-page {
+  min-height: 100vh;
+}
+
+.race-hero {
+  position: relative;
+
+  min-height: 94vh;
+
+  display: flex;
+  align-items: center;
+
+  padding: 55px 6vw 260px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(2, 7, 18, 0.15),
+      rgba(2, 7, 18, 0.8)
+    ),
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(56, 189, 248, 0.16),
+      transparent 40%
+    );
+}
+
+.race-hero::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 90px,
+      rgba(255, 255, 255, 0.025) 91px,
+      transparent 92px
+    );
+
+  pointer-events: none;
+}
+
+.race-hero__overlay {
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(2, 7, 18, 0.82),
+      rgba(2, 7, 18, 0.28),
+      rgba(2, 7, 18, 0.65)
+    );
+
+  pointer-events: none;
+}
+
+.race-hero__content {
+  position: relative;
+  z-index: 5;
+
+  width: min(1050px, 100%);
+
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+.race-badge {
+  display: inline-block;
+
+  padding: 10px 16px;
+
+  border: 1px solid var(--blue);
+  border-radius: 999px;
+
+  color: var(--blue);
+
+  background:
+    rgba(3, 16, 28, 0.76);
+
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+
+  box-shadow:
+    0 0 24px
+    rgba(56, 189, 248, 0.14);
+}
+
+.race-hero h1 {
+  margin: 24px 0 8px;
+
+  max-width: 980px;
+
+  font-size:
+    clamp(
+      3.1rem,
+      8vw,
+      7.4rem
+    );
+
+  line-height: 0.98;
+
+  text-transform: uppercase;
+
+  text-shadow:
+    0 8px 35px
+    rgba(0, 0, 0, 0.55);
+}
+
+.race-hero h2 {
+  margin: 0 0 18px;
+
+  color: var(--orange);
+
+  font-size:
+    clamp(
+      1.7rem,
+      3.5vw,
+      3.2rem
+    );
+
+  letter-spacing: 0.04em;
+}
+
+.hero-description {
+  max-width: 850px;
+
+  color: var(--muted);
+
+  font-size:
+    clamp(
+      1rem,
+      2vw,
+      1.3rem
+    );
+
+  line-height: 1.7;
+}
+
+.hero-features {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      4,
+      minmax(0, 1fr)
+    );
+
+  gap: 14px;
+
+  margin-top: 30px;
+}
+
+.hero-feature {
+  min-height: 150px;
+
+  padding: 18px;
+
+  border:
+    2px solid
+    var(--border);
+
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(18, 61, 95, 0.92),
+      rgba(7, 28, 46, 0.94)
+    );
+
+  box-shadow:
+    0 14px 34px
+    rgba(0, 0, 0, 0.35);
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.hero-feature:hover {
+  transform: translateY(-5px);
+  border-color: var(--orange);
+}
+
+.hero-feature span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 2.4rem;
+}
+
+.hero-feature strong {
+  display: block;
+  font-size: 1.12rem;
+}
+
+.hero-feature small {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 14px;
+
+  margin-top: 28px;
+}
+
+.btn {
+  min-height: 60px;
+
+  padding: 15px 24px;
+
+  border-radius: 15px;
+
+  font-weight: 800;
+
+  transition:
+    transform 0.18s ease,
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.06);
+}
+
+.btn-primary {
+  border: 0;
+
+  color: #111827;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fde68a,
+      var(--orange)
+    );
+
+  box-shadow:
+    0 14px 34px
+    rgba(251, 191, 36, 0.2);
+}
+
+.btn-teacher {
+  border:
+    2px solid
+    #60a5fa;
+
+  color: #ffffff;
+
+  background:
+    linear-gradient(
+      135deg,
+      #1d4ed8,
+      #0f3a65
+    );
+
+  box-shadow:
+    0 14px 34px
+    rgba(29, 78, 216, 0.25);
+}
+
+.compatibility {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 14px;
+
+  margin-top: 24px;
+
+  color: var(--muted);
+
+  font-size: 0.92rem;
+}
+
+.compatibility span {
+  padding: 7px 10px;
+
+  border-radius: 999px;
+
+  background:
+    rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================================
+   STARTING LIGHTS
+========================================================= */
+
+.starting-lights {
+  position: absolute;
+  z-index: 6;
+
+  top: 42px;
+  right: 5vw;
+
+  display: flex;
+  gap: 12px;
+
+  padding: 14px 18px;
+
+  border:
+    3px solid
+    #111827;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #1f2937,
+      #030712
+    );
+
+  box-shadow:
+    0 12px 30px
+    rgba(0, 0, 0, 0.5);
+}
+
+.light {
+  width: 34px;
+  height: 34px;
+
+  border:
+    4px solid
+    #020617;
+
+  border-radius: 50%;
+
+  box-shadow:
+    inset 0 0 8px
+    rgba(0, 0, 0, 0.75);
+}
+
+.light-red {
+  background:
+    radial-gradient(
+      circle,
+      #fb7185,
+      #7f1d1d
+    );
+
+  animation:
+    redLightPulse
+    1.2s ease-in-out
+    infinite;
+}
+
+.light-green {
+  background:
+    radial-gradient(
+      circle,
+      #6ee7b7,
+      #065f46
+    );
+
+  box-shadow:
+    0 0 16px
+    rgba(52, 211, 153, 0.75);
+
+  animation:
+    greenLightPulse
+    1.2s ease-in-out
+    infinite;
+}
+
+@keyframes redLightPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes greenLightPulse {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* =========================================================
+   TRACK PREVIEW
+========================================================= */
+
+.track-preview {
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  height: 230px;
+
+  overflow: hidden;
+
+  background:
+    linear-gradient(
+      180deg,
+      #475569 0%,
+      #20242a 14%,
+      #101317 100%
+    );
+
+  border-top:
+    6px solid
+    #94a3b8;
+
+  box-shadow:
+    inset 0 18px 30px
+    rgba(0, 0, 0, 0.28);
+}
+
+.track-preview::before {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  top: 34px;
+
+  height: 8px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #ffffff 0 80px,
+      transparent 80px 150px
+    );
+
+  opacity: 0.85;
+}
+
+.track-preview::after {
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+  right: 0;
+  bottom: 20px;
+
+  height: 24px;
+
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #dc2626 0 42px,
+      #ffffff 42px 84px
+    );
+
+  box-shadow:
+    0 -4px 0
+    rgba(0, 0, 0, 0.25);
+}
+
+.track-line {
+  position: absolute;
+
+  top: 48px;
+  bottom: 24px;
+
+  width: 5px;
+
+  background:
+    rgba(255, 255, 255, 0.35);
+
+  transform: skewX(-10deg);
+}
+
+.track-line-left {
+  left: 23%;
+}
+
+.track-line-right {
+  right: 23%;
+}
+
+.finish-line {
+  position: absolute;
+
+  right: 13vw;
+  top: 0;
+  bottom: 0;
+
+  width: 86px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, 1fr);
+
+  grid-template-rows:
+    repeat(4, 1fr);
+}
+
+.finish-line span:nth-child(4n + 1),
+.finish-line span:nth-child(4n + 4) {
+  background: #ffffff;
+}
+
+.finish-line span:nth-child(4n + 2),
+.finish-line span:nth-child(4n + 3) {
+  background: #111827;
+}
+
+/* =========================================================
+   CAR SHOWCASE
+========================================================= */
+
+.car-showcase {
+  position: absolute;
+  z-index: 8;
+
+  left: 4vw;
+  right: 4vw;
+  bottom: 54px;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      5,
+      minmax(0, 1fr)
+    );
+
+  gap: 18px;
+
+  align-items: end;
+}
+
+.showcase-car {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  min-height: 110px;
+
+  animation:
+    idleCar
+    1.4s ease-in-out
+    infinite;
+}
+
+.showcase-car:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.showcase-car:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.showcase-car:nth-child(4) {
+  animation-delay: 0.48s;
+}
+
+.showcase-car:nth-child(5) {
+  animation-delay: 0.64s;
+}
+
+.car-body {
+  display: block;
+
+  font-size:
+    clamp(
+      3.6rem,
+      7vw,
+      6.4rem
+    );
+
+  transform:
+    rotateY(180deg);
+
+  filter:
+    drop-shadow(
+      0 14px 7px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+.car-number {
+  position: absolute;
+
+  top: 2px;
+  left: 50%;
+
+  transform:
+    translateX(-50%);
+
+  min-width: 42px;
+
+  padding: 5px 8px;
+
+  border:
+    2px solid
+    #ffffff;
+
+  border-radius: 999px;
+
+  color: #ffffff;
+
+  background:
+    rgba(0, 0, 0, 0.78);
+
+  text-align: center;
+
+  font-size: 0.78rem;
+  font-weight: 900;
+
+  box-shadow:
+    0 6px 14px
+    rgba(0, 0, 0, 0.35);
+}
+
+.car-red .car-body {
+  filter:
+    hue-rotate(0deg)
+    saturate(1.4)
+    drop-shadow(
+      0 14px 7px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+.car-blue .car-body {
+  filter:
+    hue-rotate(180deg)
+    saturate(1.4)
+    drop-shadow(
+      0 14px 7px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+.car-green .car-body {
+  filter:
+    hue-rotate(90deg)
+    saturate(1.4)
+    drop-shadow(
+      0 14px 7px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+.car-yellow .car-body {
+  filter:
+    hue-rotate(35deg)
+    saturate(1.7)
+    brightness(1.18)
+    drop-shadow(
+      0 14px 7px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+.car-black .car-body {
+  filter:
+    grayscale(1)
+    brightness(0.72)
+    drop-shadow(
+      0 14px 7px
+      rgba(0, 0, 0, 0.42)
+    );
+}
+
+@keyframes idleCar {
+  0%,
+  100% {
+    transform:
+      translateY(0);
+  }
+
+  50% {
+    transform:
+      translateY(-5px);
+  }
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+.landing-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 14px;
+
+  padding: 20px 6vw;
+
+  color: var(--muted);
+
+  background: #020712;
+
+  border-top:
+    1px solid
+    rgba(255, 255, 255, 0.08);
+}
+
+.landing-footer p {
+  margin: 0;
+  font-weight: 800;
+}
+
+/* =========================================================
+   RESPONSIVE TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+  .race-hero {
+    padding:
+      80px 4vw
+      260px;
+  }
+
+  .hero-features {
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(0, 1fr)
+      );
+  }
+
+  .car-showcase {
+    gap: 8px;
+  }
+
+  .starting-lights {
+    top: 18px;
+    right: 18px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE TELEFON
+========================================================= */
+
+@media (max-width: 700px) {
+  .race-hero {
+    min-height: auto;
+
+    padding:
+      85px 14px
+      210px;
+  }
+
+  .race-hero__content {
+    width: 100%;
+  }
+
+  .race-hero h1 {
+    font-size:
+      clamp(
+        2.4rem,
+        13vw,
+        4.5rem
+      );
+  }
+
+  .race-hero h2 {
+    font-size:
+      clamp(
+        1.25rem,
+        7vw,
+        2rem
+      );
+  }
+
+  .hero-features {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-feature {
+    min-height: auto;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .compatibility {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .starting-lights {
+    top: 12px;
+    right: 12px;
+
+    gap: 7px;
+
+    padding: 9px 10px;
+  }
+
+  .light {
+    width: 22px;
+    height: 22px;
+  }
+
+  .track-preview {
+    height: 170px;
+  }
+
+  .car-showcase {
+    left: 5px;
+    right: 5px;
+    bottom: 38px;
+
+    grid-template-columns:
+      repeat(
+        5,
+        minmax(0, 1fr)
+      );
+
+    gap: 1px;
+  }
+
+  .showcase-car {
+    min-height: 78px;
+  }
+
+  .car-body {
+    font-size:
+      clamp(
+        2.2rem,
+        12vw,
+        3.3rem
+      );
+  }
+
+  .car-number {
+    min-width: 30px;
+
+    padding: 3px 5px;
+
+    font-size: 0.62rem;
+  }
+
+  .finish-line {
+    right: 8vw;
+    width: 48px;
+  }
+
+  .landing-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* =========================================================
+   LANDSCAPE MOBILE
+========================================================= */
+
+@media (
+  max-height: 560px
+)
+and
+(
+  orientation: landscape
+) {
+  .race-hero {
+    min-height: 100vh;
+
+    padding:
+      40px 24px
+      160px;
+  }
+
+  .race-hero h1 {
+    font-size:
+      clamp(
+        2.3rem,
+        7vw,
+        4.5rem
+      );
+  }
+
+  .hero-features {
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(0, 1fr)
+      );
+  }
+
+  .hero-feature {
+    min-height: 110px;
+    padding: 12px;
+  }
+
+  .hero-feature span {
+    font-size: 1.7rem;
+  }
+
+  .track-preview {
+    height: 135px;
+  }
+
+  .car-showcase {
+    bottom: 22px;
+  }
+}
