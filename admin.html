@@ -14,6 +14,16 @@
   >
 
   <meta
+    http-equiv="Pragma"
+    content="no-cache"
+  >
+
+  <meta
+    http-equiv="Expires"
+    content="0"
+  >
+
+  <meta
     name="theme-color"
     content="#020712"
   >
@@ -31,13 +41,17 @@
 
   <link
     rel="stylesheet"
-    href="admin.css?v=20260805-admin-1"
+    href="admin.css?v=20260805-admin-firebase-2"
   >
 </head>
 
 <body>
 
   <main class="admin-page">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
 
     <header class="admin-header">
 
@@ -88,32 +102,70 @@
     </header>
 
 
+    <!-- =====================================================
+         STATISTIK
+    ====================================================== -->
+
     <section class="top-stats">
 
       <article class="stat-card">
-        <span>Jumlah Pemain</span>
-        <strong id="totalPlayers">0</strong>
+
+        <span>
+          Jumlah Pemain
+        </span>
+
+        <strong id="totalPlayers">
+          0
+        </strong>
+
       </article>
 
       <article class="stat-card">
-        <span>Diluluskan</span>
-        <strong id="approvedPlayers">0</strong>
+
+        <span>
+          Diluluskan
+        </span>
+
+        <strong id="approvedPlayers">
+          0
+        </strong>
+
       </article>
 
       <article class="stat-card">
-        <span>Sedia</span>
-        <strong id="readyPlayers">0</strong>
+
+        <span>
+          Sedia
+        </span>
+
+        <strong id="readyPlayers">
+          0
+        </strong>
+
       </article>
 
       <article class="stat-card">
-        <span>Status Perlumbaan</span>
-        <strong id="raceStatus">MENUNGGU</strong>
+
+        <span>
+          Status Perlumbaan
+        </span>
+
+        <strong id="raceStatus">
+          MENUNGGU
+        </strong>
+
       </article>
 
     </section>
 
 
+    <!-- =====================================================
+         GRID UTAMA
+    ====================================================== -->
+
     <section class="dashboard-grid">
+
+      <!-- PEMAIN -->
 
       <article class="panel player-panel">
 
@@ -143,10 +195,134 @@
         <div
           id="playerGrid"
           class="player-grid"
-        ></div>
+        >
+
+          <article class="admin-player-slot empty">
+
+            <span class="slot-number">
+              1
+            </span>
+
+            <span class="slot-car">
+              🏁
+            </span>
+
+            <strong class="slot-name">
+              SLOT KOSONG
+            </strong>
+
+            <span class="slot-id">
+              Menunggu pemain
+            </span>
+
+            <span class="slot-status">
+              BELUM MASUK
+            </span>
+
+          </article>
+
+          <article class="admin-player-slot empty">
+
+            <span class="slot-number">
+              2
+            </span>
+
+            <span class="slot-car">
+              🏁
+            </span>
+
+            <strong class="slot-name">
+              SLOT KOSONG
+            </strong>
+
+            <span class="slot-id">
+              Menunggu pemain
+            </span>
+
+            <span class="slot-status">
+              BELUM MASUK
+            </span>
+
+          </article>
+
+          <article class="admin-player-slot empty">
+
+            <span class="slot-number">
+              3
+            </span>
+
+            <span class="slot-car">
+              🏁
+            </span>
+
+            <strong class="slot-name">
+              SLOT KOSONG
+            </strong>
+
+            <span class="slot-id">
+              Menunggu pemain
+            </span>
+
+            <span class="slot-status">
+              BELUM MASUK
+            </span>
+
+          </article>
+
+          <article class="admin-player-slot empty">
+
+            <span class="slot-number">
+              4
+            </span>
+
+            <span class="slot-car">
+              🏁
+            </span>
+
+            <strong class="slot-name">
+              SLOT KOSONG
+            </strong>
+
+            <span class="slot-id">
+              Menunggu pemain
+            </span>
+
+            <span class="slot-status">
+              BELUM MASUK
+            </span>
+
+          </article>
+
+          <article class="admin-player-slot empty">
+
+            <span class="slot-number">
+              5
+            </span>
+
+            <span class="slot-car">
+              🏁
+            </span>
+
+            <strong class="slot-name">
+              SLOT KOSONG
+            </strong>
+
+            <span class="slot-id">
+              Menunggu pemain
+            </span>
+
+            <span class="slot-status">
+              BELUM MASUK
+            </span>
+
+          </article>
+
+        </div>
 
       </article>
 
+
+      <!-- TETAPAN -->
 
       <article class="panel setup-panel">
 
@@ -167,11 +343,17 @@
         </div>
 
 
+        <!-- PILIH KP -->
+
         <section class="control-section">
 
           <h3>
             Pilih KP
           </h3>
+
+          <p class="subtitle">
+            Pilih satu atau lebih topik untuk bank soalan perlumbaan.
+          </p>
 
           <div
             id="kpSelector"
@@ -180,6 +362,8 @@
 
         </section>
 
+
+        <!-- JENIS SOALAN -->
 
         <section class="control-section">
 
@@ -190,54 +374,81 @@
           <div class="question-type-grid">
 
             <label class="check-card">
+
               <input
                 type="checkbox"
                 value="mcq"
                 checked
               >
-              <span>MCQ</span>
+
+              <span>
+                MCQ
+              </span>
+
             </label>
 
             <label class="check-card">
+
               <input
                 type="checkbox"
                 value="dragdrop"
                 checked
               >
-              <span>Drag & Drop</span>
+
+              <span>
+                Drag & Drop
+              </span>
+
             </label>
 
             <label class="check-card">
+
               <input
                 type="checkbox"
                 value="matching"
                 checked
               >
-              <span>Matching</span>
+
+              <span>
+                Matching
+              </span>
+
             </label>
 
             <label class="check-card">
+
               <input
                 type="checkbox"
                 value="sequence"
                 checked
               >
-              <span>Sequence</span>
+
+              <span>
+                Sequence
+              </span>
+
             </label>
 
             <label class="check-card">
+
               <input
                 type="checkbox"
                 value="truefalse"
                 checked
               >
-              <span>True / False</span>
+
+              <span>
+                True / False
+              </span>
+
             </label>
 
           </div>
 
         </section>
 
+
+        <!-- BILANGAN SOALAN -->
 
         <section class="control-section">
 
@@ -292,6 +503,8 @@
         </section>
 
 
+        <!-- KAWALAN PERLUMBAAN -->
+
         <section class="control-section">
 
           <h3>
@@ -333,6 +546,10 @@
     </section>
 
 
+    <!-- =====================================================
+         LIVE MONITOR
+    ====================================================== -->
+
     <section class="panel live-panel">
 
       <div class="section-header">
@@ -353,7 +570,7 @@
           id="connectionStatus"
           class="connection-badge"
         >
-          SIMULASI
+          MENYAMBUNG...
         </span>
 
       </div>
@@ -361,12 +578,78 @@
       <div
         id="liveMonitor"
         class="live-monitor"
-      ></div>
+      >
+
+        <article class="live-card">
+
+          <h3>
+            SLOT 1
+          </h3>
+
+          <p>
+            Belum ada pemain.
+          </p>
+
+        </article>
+
+        <article class="live-card">
+
+          <h3>
+            SLOT 2
+          </h3>
+
+          <p>
+            Belum ada pemain.
+          </p>
+
+        </article>
+
+        <article class="live-card">
+
+          <h3>
+            SLOT 3
+          </h3>
+
+          <p>
+            Belum ada pemain.
+          </p>
+
+        </article>
+
+        <article class="live-card">
+
+          <h3>
+            SLOT 4
+          </h3>
+
+          <p>
+            Belum ada pemain.
+          </p>
+
+        </article>
+
+        <article class="live-card">
+
+          <h3>
+            SLOT 5
+          </h3>
+
+          <p>
+            Belum ada pemain.
+          </p>
+
+        </article>
+
+      </div>
 
     </section>
 
   </main>
 
+
+  <!-- =====================================================
+       COUNTDOWN
+  ====================================================== -->
 
   <div
     id="countdownOverlay"
@@ -378,8 +661,11 @@
       <div class="race-lights">
 
         <span class="race-light"></span>
+
         <span class="race-light"></span>
+
         <span class="race-light"></span>
+
         <span class="race-light green"></span>
 
       </div>
@@ -393,14 +679,24 @@
   </div>
 
 
+  <!-- =====================================================
+       TOAST
+  ====================================================== -->
+
   <div
     id="toast"
     class="toast hidden"
+    aria-live="polite"
   ></div>
 
 
+  <!-- =====================================================
+       JAVASCRIPT FIREBASE
+  ====================================================== -->
+
   <script
-    src="admin.js?v=20260805-admin-1"
+    type="module"
+    src="admin.js?v=20260805-admin-firebase-2"
   ></script>
 
 </body>
