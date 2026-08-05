@@ -1,41 +1,129 @@
-const PROFILE_KEY =
-  "c01_race_player_profile_v1";
+import {
+  RaceFirebase
+} from "./race-firebase.js?v=20260805-admin-firebase-2";
 
-const ADMIN_SESSION_KEY =
-  "c01_race_admin_session_v1";
 
 const RACE_CONFIG_KEY =
   "c01_race_config_v1";
 
-const RACE_STATE_KEY =
-  "c01_race_state_v1";
+const ADMIN_NAME_KEY =
+  "c01_race_admin_name_v1";
 
 const MAX_PLAYERS = 5;
 
+
 let players = [];
+
+let raceControl = {
+  status: "WAITING",
+  selectedKp: [1],
+  questionTypes: ["mcq"],
+  questionCount: 10
+};
+
 let selectedKp = [1];
+
 let selectedQuestionCount = 10;
+
 let audioEnabled = true;
-let raceState = "WAITING";
-let raceSimulationTimer = null;
+
+let teacherName =
+  localStorage.getItem(
+    ADMIN_NAME_KEY
+  ) || "Pegawai Penilai";
+
+
+/* =========================================================
+   MULA SISTEM
+========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
   initialiseAdmin
 );
 
-function initialiseAdmin() {
-  loadSavedRaceConfig();
+
+async function initialiseAdmin() {
+  loadLocalConfiguration();
+
   createKpButtons();
-  initialiseCountButtons();
-  initialiseQuestionTypes();
+
+  initialiseQuestionCountButtons();
+
+  initialiseQuestionTypeControls();
+
   initialiseMainButtons();
+
   initialiseHeaderButtons();
-  loadDemoPlayers();
-  renderAll();
+
+  renderPlayerGrid();
+
+  renderLiveMonitor();
+
+  updateStatistics();
+
+  try {
+    await RaceFirebase
+      .initialiseRaceFirebase();
+
+    setConnectionStatus(
+      "REALTIME AKTIF",
+      false
+    );
+
+    RaceFirebase.listenToPlayers(
+      incomingPlayers => {
+        players =
+          incomingPlayers.slice(
+            0,
+            MAX_PLAYERS
+          );
+
+        renderAll();
+      },
+
+      error => {
+        showFirebaseError(
+          "Senarai pemain gagal dibaca.",
+          error
+        );
+      }
+    );
+
+    RaceFirebase.listenToRaceControl(
+      control => {
+        raceControl =
+          control || {
+            status: "WAITING"
+          };
+
+        synchroniseControlDisplay();
+
+        renderAll();
+      },
+
+      error => {
+        showFirebaseError(
+          "Race Control gagal dibaca.",
+          error
+        );
+      }
+    );
+
+  } catch (error) {
+    showFirebaseError(
+      "Firebase gagal dimulakan.",
+      error
+    );
+  }
 }
 
-function loadSavedRaceConfig() {
+
+/* =========================================================
+   KONFIGURASI TEMPATAN
+========================================================= */
+
+function loadLocalConfiguration() {
   try {
     const saved =
       JSON.parse(
@@ -44,53 +132,59 @@ function loadSavedRaceConfig() {
         ) || "null"
       );
 
-    if (!saved) return;
+    if (!saved) {
+      return;
+    }
 
     selectedKp =
-      Array.isArray(saved.selectedKp) &&
+      Array.isArray(
+        saved.selectedKp
+      ) &&
       saved.selectedKp.length
         ? saved.selectedKp
         : [1];
 
     selectedQuestionCount =
-      Number(saved.questionCount) ||
-      10;
+      Number(
+        saved.questionCount
+      ) || 10;
 
     audioEnabled =
       saved.audioEnabled !== false;
 
-    raceState =
-      saved.raceState ||
-      "WAITING";
-
   } catch (error) {
-    console.error(
-      "Tetapan perlumbaan gagal dibaca:",
+    console.warn(
+      "Tetapan lama gagal dibaca:",
       error
     );
   }
 }
 
-function saveRaceConfig() {
-  const questionTypes =
-    getSelectedQuestionTypes();
 
-  const config = {
-    selectedKp,
-    questionTypes,
-    questionCount:
-      selectedQuestionCount,
-    audioEnabled,
-    raceState,
-    updatedAt:
-      new Date().toISOString()
-  };
-
+function saveLocalConfiguration() {
   localStorage.setItem(
     RACE_CONFIG_KEY,
-    JSON.stringify(config)
+    JSON.stringify({
+      selectedKp,
+
+      questionTypes:
+        getSelectedQuestionTypes(),
+
+      questionCount:
+        selectedQuestionCount,
+
+      audioEnabled,
+
+      updatedAt:
+        new Date().toISOString()
+    })
   );
 }
+
+
+/* =========================================================
+   PILIHAN KP01–KP15
+========================================================= */
 
 function createKpButtons() {
   const container =
@@ -101,37 +195,42 @@ function createKpButtons() {
   container.innerHTML = "";
 
   for (
-    let kp = 1;
-    kp <= 15;
-    kp++
+    let kpNumber = 1;
+    kpNumber <= 15;
+    kpNumber++
   ) {
     const button =
       document.createElement(
         "button"
       );
 
-    button.type = "button";
+    button.type =
+      "button";
+
     button.className =
       "kp-button";
 
     button.dataset.kp =
-      String(kp);
+      String(kpNumber);
 
     button.textContent =
-      `KP${String(kp).padStart(
-        2,
-        "0"
-      )}`;
+      `KP${String(
+        kpNumber
+      ).padStart(2, "0")}`;
 
     button.classList.toggle(
       "selected",
-      selectedKp.includes(kp)
+      selectedKp.includes(
+        kpNumber
+      )
     );
 
     button.addEventListener(
       "click",
-      function () {
-        toggleKpSelection(kp);
+      () => {
+        toggleKpSelection(
+          kpNumber
+        );
       }
     );
 
@@ -141,9 +240,14 @@ function createKpButtons() {
   }
 }
 
-function toggleKpSelection(kp) {
+
+function toggleKpSelection(
+  kpNumber
+) {
   if (
-    selectedKp.includes(kp)
+    selectedKp.includes(
+      kpNumber
+    )
   ) {
     if (
       selectedKp.length === 1
@@ -157,15 +261,20 @@ function toggleKpSelection(kp) {
 
     selectedKp =
       selectedKp.filter(
-        item =>
-          item !== kp
+        number =>
+          number !== kpNumber
       );
 
   } else {
-    selectedKp.push(kp);
+    selectedKp.push(
+      kpNumber
+    );
 
     selectedKp.sort(
-      (first, second) =>
+      (
+        first,
+        second
+      ) =>
         first - second
     );
   }
@@ -175,27 +284,74 @@ function toggleKpSelection(kp) {
       ".kp-button"
     )
     .forEach(button => {
-      const buttonKp =
-        Number(
-          button.dataset.kp
-        );
-
       button.classList.toggle(
         "selected",
+
         selectedKp.includes(
-          buttonKp
+          Number(
+            button.dataset.kp
+          )
         )
       );
     });
 
-  saveRaceConfig();
+  saveLocalConfiguration();
+}
 
-  showToast(
-    `${selectedKp.length} KP dipilih.`
+
+/* =========================================================
+   JENIS SOALAN
+========================================================= */
+
+function initialiseQuestionTypeControls() {
+  document
+    .querySelectorAll(
+      '.check-card input[type="checkbox"]'
+    )
+    .forEach(input => {
+      input.addEventListener(
+        "change",
+        () => {
+          const selectedTypes =
+            getSelectedQuestionTypes();
+
+          if (
+            selectedTypes.length === 0
+          ) {
+            input.checked =
+              true;
+
+            showToast(
+              "Pilih sekurang-kurangnya satu jenis soalan."
+            );
+
+            return;
+          }
+
+          saveLocalConfiguration();
+        }
+      );
+    });
+}
+
+
+function getSelectedQuestionTypes() {
+  return [
+    ...document.querySelectorAll(
+      '.check-card input[type="checkbox"]:checked'
+    )
+  ].map(
+    input =>
+      input.value
   );
 }
 
-function initialiseCountButtons() {
+
+/* =========================================================
+   BILANGAN SOALAN
+========================================================= */
+
+function initialiseQuestionCountButtons() {
   document
     .querySelectorAll(
       ".count-button"
@@ -214,7 +370,7 @@ function initialiseCountButtons() {
 
       button.addEventListener(
         "click",
-        function () {
+        () => {
           selectedQuestionCount =
             count;
 
@@ -232,7 +388,7 @@ function initialiseCountButtons() {
             "selected"
           );
 
-          saveRaceConfig();
+          saveLocalConfiguration();
 
           showToast(
             `${count} soalan dipilih.`
@@ -242,47 +398,10 @@ function initialiseCountButtons() {
     });
 }
 
-function initialiseQuestionTypes() {
-  document
-    .querySelectorAll(
-      '.check-card input[type="checkbox"]'
-    )
-    .forEach(input => {
-      input.addEventListener(
-        "change",
-        function () {
-          const selected =
-            getSelectedQuestionTypes();
 
-          if (
-            selected.length === 0
-          ) {
-            input.checked =
-              true;
-
-            showToast(
-              "Sekurang-kurangnya satu jenis soalan mesti dipilih."
-            );
-
-            return;
-          }
-
-          saveRaceConfig();
-        }
-      );
-    });
-}
-
-function getSelectedQuestionTypes() {
-  return [
-    ...document.querySelectorAll(
-      '.check-card input[type="checkbox"]:checked'
-    )
-  ].map(
-    input =>
-      input.value
-  );
-}
+/* =========================================================
+   BUTANG UTAMA
+========================================================= */
 
 function initialiseMainButtons() {
   document
@@ -312,6 +431,7 @@ function initialiseMainButtons() {
       stopRace
     );
 }
+
 
 function initialiseHeaderButtons() {
   document
@@ -344,235 +464,64 @@ function initialiseHeaderButtons() {
   updateAudioButton();
 }
 
-function loadDemoPlayers() {
-  players = [];
 
-  try {
-    const savedProfile =
-      JSON.parse(
-        localStorage.getItem(
-          PROFILE_KEY
-        ) || "null"
-      );
-
-    if (savedProfile) {
-      players.push({
-        uid:
-          "local-player-1",
-
-        name:
-          savedProfile.name ||
-          "Pelajar 1",
-
-        studentId:
-          savedProfile.studentId ||
-          "C01-001",
-
-        carIcon:
-          savedProfile.carIcon ||
-          "🏎️",
-
-        carNumber:
-          savedProfile.carNumber ||
-          "01",
-
-        carColour:
-          savedProfile.carColour ||
-          "red",
-
-        approved:
-          savedProfile.approved ===
-          true,
-
-        ready:
-          savedProfile.ready ===
-          true,
-
-        score:
-          Number(
-            savedProfile.score || 0
-          ),
-
-        progress:
-          Number(
-            savedProfile.progress || 0
-          ),
-
-        correctAnswers:
-          Number(
-            savedProfile
-              .correctAnswers || 0
-          ),
-
-        wrongAnswers:
-          Number(
-            savedProfile
-              .wrongAnswers || 0
-          ),
-
-        currentQuestion:
-          Number(
-            savedProfile
-              .currentQuestion || 0
-          ),
-
-        speed:
-          Number(
-            savedProfile.speed || 0
-          ),
-
-        raceStatus:
-          savedProfile.raceStatus ||
-          "WAITING"
-      });
-    }
-
-  } catch (error) {
-    console.error(
-      "Profil pemain gagal dibaca:",
-      error
-    );
-  }
-
-  const demoNames = [
-    {
-      name:
-        "Ahmad",
-      studentId:
-        "C01-002",
-      carIcon:
-        "🚘"
-    },
-    {
-      name:
-        "Siti",
-      studentId:
-        "C01-003",
-      carIcon:
-        "🚗"
-    },
-    {
-      name:
-        "Hakim",
-      studentId:
-        "C01-004",
-      carIcon:
-        "⚡"
-    },
-    {
-      name:
-        "Farah",
-      studentId:
-        "C01-005",
-      carIcon:
-        "🔥"
-    }
-  ];
-
-  while (
-    players.length < MAX_PLAYERS
-  ) {
-    const demo =
-      demoNames[
-        players.length - 1
-      ];
-
-    if (!demo) break;
-
-    players.push({
-      uid:
-        `demo-${players.length + 1}`,
-
-      name:
-        demo.name,
-
-      studentId:
-        demo.studentId,
-
-      carIcon:
-        demo.carIcon,
-
-      carNumber:
-        String(
-          players.length + 1
-        ).padStart(
-          2,
-          "0"
-        ),
-
-      approved:
-        false,
-
-      ready:
-        false,
-
-      score:
-        0,
-
-      progress:
-        0,
-
-      correctAnswers:
-        0,
-
-      wrongAnswers:
-        0,
-
-      currentQuestion:
-        0,
-
-      speed:
-        0,
-
-      raceStatus:
-        "WAITING"
-    });
-  }
-}
+/* =========================================================
+   PAPARAN KESELURUHAN
+========================================================= */
 
 function renderAll() {
-  renderStatistics();
   renderPlayerGrid();
+
   renderLiveMonitor();
+
+  updateStatistics();
+
   updateRaceStatus();
 }
 
-function renderStatistics() {
-  const total =
-    players.length;
 
-  const approved =
+/* =========================================================
+   STATISTIK
+========================================================= */
+
+function updateStatistics() {
+  const approvedCount =
     players.filter(
       player =>
-        player.approved
+        player.approved === true
     ).length;
 
-  const ready =
+  const readyCount =
     players.filter(
       player =>
-        player.ready
+        player.ready === true
     ).length;
 
   document.getElementById(
     "totalPlayers"
   ).textContent =
-    total;
+    players.length;
 
   document.getElementById(
     "approvedPlayers"
   ).textContent =
-    approved;
+    approvedCount;
 
   document.getElementById(
     "readyPlayers"
   ).textContent =
-    ready;
+    readyCount;
 
   document.getElementById(
     "playerCounter"
   ).textContent =
-    `${total} / ${MAX_PLAYERS}`;
+    `${players.length} / ${MAX_PLAYERS}`;
 }
+
+
+/* =========================================================
+   GRID 5 PEMAIN
+========================================================= */
 
 function renderPlayerGrid() {
   const container =
@@ -598,6 +547,7 @@ function renderPlayerGrid() {
   container.innerHTML =
     slots.join("");
 }
+
 
 function createPlayerSlot(
   player,
@@ -632,17 +582,28 @@ function createPlayerSlot(
   }
 
   let statusClass = "";
+
   let statusText =
     "MENUNGGU";
 
-  if (player.approved) {
+  if (
+    player.approved === true
+  ) {
     statusClass =
       "approved";
 
     statusText =
-      player.ready
-        ? "SEDIA"
-        : "DILULUSKAN";
+      "DILULUSKAN";
+  }
+
+  if (
+    player.ready === true
+  ) {
+    statusClass =
+      "approved";
+
+    statusText =
+      "SEDIA";
   }
 
   return `
@@ -682,7 +643,10 @@ function createPlayerSlot(
         <button
           class="player-action-button approve-button"
           type="button"
-          onclick="approvePlayer('${player.uid}')"
+          data-action="approve"
+          data-uid="${escapeHtml(
+            player.uid
+          )}"
         >
           ${
             player.approved
@@ -694,7 +658,10 @@ function createPlayerSlot(
         <button
           class="player-action-button reject-button"
           type="button"
-          onclick="removePlayer('${player.uid}')"
+          data-action="remove"
+          data-uid="${escapeHtml(
+            player.uid
+          )}"
         >
           KELUARKAN
         </button>
@@ -705,106 +672,99 @@ function createPlayerSlot(
   `;
 }
 
-window.approvePlayer =
-  function (uid) {
-    const player =
-      players.find(
-        item =>
-          item.uid === uid
+
+/* =========================================================
+   EVENT BUTANG PEMAIN
+========================================================= */
+
+document.addEventListener(
+  "click",
+  async event => {
+    const button =
+      event.target.closest(
+        "[data-action][data-uid]"
       );
 
-    if (!player) return;
-
-    player.approved =
-      !player.approved;
-
-    if (!player.approved) {
-      player.ready =
-        false;
+    if (!button) {
+      return;
     }
 
-    saveLocalPlayerState(
-      player
-    );
+    const uid =
+      button.dataset.uid;
 
-    renderAll();
-
-    showToast(
-      player.approved
-        ? `${player.name} diluluskan.`
-        : `Kelulusan ${player.name} dibatalkan.`
-    );
-  };
-
-window.removePlayer =
-  function (uid) {
     const player =
       players.find(
         item =>
           item.uid === uid
       );
 
-    if (!player) return;
+    if (!player) {
+      return;
+    }
 
-    const confirmed =
-      window.confirm(
-        `Keluarkan ${player.name} daripada lobby?`
+    button.disabled =
+      true;
+
+    try {
+      if (
+        button.dataset.action ===
+        "approve"
+      ) {
+        await RaceFirebase
+          .approvePlayer(
+            uid,
+            player.approved !== true
+          );
+
+        showToast(
+          player.approved
+            ? `Kelulusan ${player.name} dibatalkan.`
+            : `${player.name} diluluskan.`
+        );
+      }
+
+      if (
+        button.dataset.action ===
+        "remove"
+      ) {
+        const confirmed =
+          window.confirm(
+            `Keluarkan ${player.name} daripada lobby?`
+          );
+
+        if (!confirmed) {
+          button.disabled =
+            false;
+
+          return;
+        }
+
+        await RaceFirebase
+          .rejectPlayer(
+            uid
+          );
+
+        showToast(
+          `${player.name} dikeluarkan.`
+        );
+      }
+
+    } catch (error) {
+      showFirebaseError(
+        "Tindakan pemain gagal.",
+        error
       );
 
-    if (!confirmed) return;
-
-    players =
-      players.filter(
-        item =>
-          item.uid !== uid
-      );
-
-    renderAll();
-
-    showToast(
-      `${player.name} dikeluarkan.`
-    );
-  };
-
-function saveLocalPlayerState(
-  player
-) {
-  if (
-    player.uid !==
-    "local-player-1"
-  ) {
-    return;
+      button.disabled =
+        false;
+    }
   }
+);
 
-  try {
-    const profile =
-      JSON.parse(
-        localStorage.getItem(
-          PROFILE_KEY
-        ) || "{}"
-      );
 
-    const updated = {
-      ...profile,
-      approved:
-        player.approved,
-      ready:
-        player.ready,
-      updatedAt:
-        new Date().toISOString()
-    };
-
-    localStorage.setItem(
-      PROFILE_KEY,
-      JSON.stringify(updated)
-    );
-
-  } catch (error) {
-    console.error(
-      error
-    );
-  }
-}
+/* =========================================================
+   LIVE MONITOR
+========================================================= */
 
 function renderLiveMonitor() {
   const container =
@@ -840,9 +800,37 @@ function renderLiveMonitor() {
       continue;
     }
 
+    const correct =
+      Number(
+        player.correctAnswers ||
+        0
+      );
+
+    const wrong =
+      Number(
+        player.wrongAnswers ||
+        0
+      );
+
+    const answered =
+      correct + wrong;
+
     const accuracy =
-      calculateAccuracy(
-        player
+      answered
+        ? Math.round(
+            (
+              correct /
+              answered
+            ) * 100
+          )
+        : 0;
+
+    const progress =
+      Math.min(
+        Number(
+          player.progress || 0
+        ),
+        100
       );
 
     cards.push(`
@@ -850,21 +838,27 @@ function renderLiveMonitor() {
 
         <h3>
           ${escapeHtml(
-            player.name
+            player.name ||
+            "Pelajar"
           )}
         </h3>
 
         <div class="live-row">
           <span>Soalan</span>
           <strong>
-            ${player.currentQuestion}/${selectedQuestionCount}
+            ${Number(
+              player.currentQuestion ||
+              0
+            )}/${selectedQuestionCount}
           </strong>
         </div>
 
         <div class="live-row">
           <span>Markah</span>
           <strong>
-            ${player.score}%
+            ${Number(
+              player.score || 0
+            )}%
           </strong>
         </div>
 
@@ -878,7 +872,9 @@ function renderLiveMonitor() {
         <div class="live-row">
           <span>Kelajuan</span>
           <strong>
-            ${player.speed} km/j
+            ${Number(
+              player.speed || 0
+            )} km/j
           </strong>
         </div>
 
@@ -886,7 +882,8 @@ function renderLiveMonitor() {
           <span>Status</span>
           <strong>
             ${escapeHtml(
-              player.raceStatus
+              player.raceStatus ||
+              "WAITING"
             )}
           </strong>
         </div>
@@ -895,10 +892,7 @@ function renderLiveMonitor() {
 
           <div
             class="progress-bar"
-            style="width:${Math.min(
-              player.progress,
-              100
-            )}%"
+            style="width:${progress}%"
           ></div>
 
         </div>
@@ -911,48 +905,53 @@ function renderLiveMonitor() {
     cards.join("");
 }
 
-function calculateAccuracy(
-  player
-) {
-  const total =
-    player.correctAnswers +
-    player.wrongAnswers;
 
-  if (!total) return 0;
+/* =========================================================
+   MULA PERLUMBAAN
+========================================================= */
 
-  return Math.round(
-    (
-      player.correctAnswers /
-      total
-    ) * 100
-  );
-}
-
-function startRace() {
-  if (
-    raceState === "RUNNING"
-  ) {
-    showToast(
-      "Perlumbaan sedang berjalan."
-    );
-
-    return;
-  }
-
+async function startRace() {
   const approvedPlayers =
     players.filter(
       player =>
-        player.approved
+        player.approved === true
     );
 
   if (
     approvedPlayers.length === 0
   ) {
     showToast(
-      "Luluskan sekurang-kurangnya seorang pemain dahulu."
+      "Luluskan sekurang-kurangnya seorang pemain."
     );
 
     return;
+  }
+
+  const unreadyPlayers =
+    approvedPlayers.filter(
+      player =>
+        player.ready !== true
+    );
+
+  if (
+    unreadyPlayers.length > 0
+  ) {
+    const names =
+      unreadyPlayers
+        .map(
+          player =>
+            player.name
+        )
+        .join(", ");
+
+    const continueRace =
+      window.confirm(
+        `${names} belum menekan Sedia. Mulakan juga?`
+      );
+
+    if (!continueRace) {
+      return;
+    }
   }
 
   const questionTypes =
@@ -968,11 +967,57 @@ function startRace() {
     return;
   }
 
-  saveRaceConfig();
-  runCountdown();
+  const startButton =
+    document.getElementById(
+      "startRaceButton"
+    );
+
+  startButton.disabled =
+    true;
+
+  try {
+    saveLocalConfiguration();
+
+    const result =
+      await RaceFirebase.startRace({
+        selectedKp,
+
+        questionTypes,
+
+        questionCount:
+          selectedQuestionCount,
+
+        startedBy:
+          teacherName
+      });
+
+    showAdminCountdown(
+      result.startTime
+    );
+
+    showToast(
+      `Perlumbaan ${result.playerCount} pemain dimulakan.`
+    );
+
+  } catch (error) {
+    showFirebaseError(
+      "Perlumbaan gagal dimulakan.",
+      error
+    );
+
+    startButton.disabled =
+      false;
+  }
 }
 
-function runCountdown() {
+
+/* =========================================================
+   COUNTDOWN GURU
+========================================================= */
+
+function showAdminCountdown(
+  startTime
+) {
   const overlay =
     document.getElementById(
       "countdownOverlay"
@@ -987,233 +1032,82 @@ function runCountdown() {
     "hidden"
   );
 
-  const steps = [
-    "3",
-    "2",
-    "1",
-    "GO!"
-  ];
+  const update =
+    () => {
+      const remaining =
+        Number(startTime || 0) -
+        Date.now();
 
-  let index = 0;
-
-  text.textContent =
-    steps[index];
-
-  playCountdownSound();
-
-  const timer =
-    window.setInterval(
-      function () {
-        index++;
-
-        if (
-          index >= steps.length
-        ) {
-          window.clearInterval(
-            timer
-          );
-
-          overlay.classList.add(
-            "hidden"
-          );
-
-          activateRace();
-
-          return;
-        }
-
+      if (
+        remaining <= 0
+      ) {
         text.textContent =
-          steps[index];
+          "GO!";
 
-        playCountdownSound();
-      },
-      850
-    );
-}
+        playTone(
+          900,
+          0.35
+        );
 
-function activateRace() {
-  raceState =
-    "RUNNING";
-
-  players.forEach(player => {
-    if (
-      player.approved
-    ) {
-      player.raceStatus =
-        "RACING";
-
-      player.currentQuestion =
-        0;
-
-      player.progress =
-        0;
-
-      player.score =
-        0;
-
-      player.correctAnswers =
-        0;
-
-      player.wrongAnswers =
-        0;
-
-      player.speed =
-        80;
-    }
-  });
-
-  saveRaceConfig();
-  updateRaceStatus();
-  renderAll();
-
-  startRaceSimulation();
-
-  showToast(
-    "Perlumbaan dimulakan!"
-  );
-}
-
-function startRaceSimulation() {
-  stopRaceSimulation();
-
-  raceSimulationTimer =
-    window.setInterval(
-      function () {
-        let finishedCount = 0;
-
-        players.forEach(player => {
-          if (
-            !player.approved ||
-            player.raceStatus !==
-              "RACING"
-          ) {
-            if (
-              player.raceStatus ===
-              "FINISHED"
-            ) {
-              finishedCount++;
-            }
-
-            return;
-          }
-
-          const answeredCorrectly =
-            Math.random() > 0.25;
-
-          player.currentQuestion++;
-
-          if (
-            answeredCorrectly
-          ) {
-            player.correctAnswers++;
-
-            player.speed =
-              Math.min(
-                320,
-                player.speed +
-                randomBetween(
-                  12,
-                  32
-                )
-              );
-
-          } else {
-            player.wrongAnswers++;
-
-            player.speed =
-              Math.max(
-                70,
-                player.speed -
-                randomBetween(
-                  8,
-                  24
-                )
-              );
-          }
-
-          const totalAnswered =
-            player.correctAnswers +
-            player.wrongAnswers;
-
-          player.score =
-            totalAnswered
-              ? Math.round(
-                  (
-                    player.correctAnswers /
-                    totalAnswered
-                  ) * 100
-                )
-              : 0;
-
-          player.progress =
-            Math.min(
-              100,
-              Math.round(
-                (
-                  player.currentQuestion /
-                  selectedQuestionCount
-                ) * 100
-              )
+        window.setTimeout(
+          () => {
+            overlay.classList.add(
+              "hidden"
             );
 
-          if (
-            player.currentQuestion >=
-            selectedQuestionCount
-          ) {
-            player.currentQuestion =
-              selectedQuestionCount;
+            document.getElementById(
+              "startRaceButton"
+            ).disabled =
+              false;
+          },
+          700
+        );
 
-            player.progress =
-              100;
+        return;
+      }
 
-            player.speed =
-              0;
+      text.textContent =
+        String(
+          Math.max(
+            1,
+            Math.ceil(
+              remaining / 1000
+            )
+          )
+        );
 
-            player.raceStatus =
-              "FINISHED";
+      playTone(
+        520,
+        0.12
+      );
 
-            finishedCount++;
-          }
-        });
+      window.setTimeout(
+        update,
+        500
+      );
+    };
 
-        renderLiveMonitor();
-
-        if (
-          finishedCount >=
-          players.filter(
-            player =>
-              player.approved
-          ).length
-        ) {
-          finishRace();
-        }
-      },
-      1150
-    );
+  update();
 }
 
-function finishRace() {
-  stopRaceSimulation();
 
-  raceState =
-    "FINISHED";
+/* =========================================================
+   STOP
+========================================================= */
 
-  saveRaceConfig();
+async function stopRace() {
+  const status =
+    raceControl.status ||
+    "WAITING";
 
-  updateRaceStatus();
-  renderAll();
-
-  showToast(
-    "Semua pemain telah tamat perlumbaan."
-  );
-}
-
-function stopRace() {
   if (
-    raceState !== "RUNNING"
+    ![
+      "RUNNING",
+      "COUNTDOWN"
+    ].includes(status)
   ) {
     showToast(
-      "Tiada perlumbaan yang sedang berjalan."
+      "Tiada perlumbaan sedang berjalan."
     );
 
     return;
@@ -1224,153 +1118,165 @@ function stopRace() {
       "Hentikan perlumbaan sekarang?"
     );
 
-  if (!confirmed) return;
+  if (!confirmed) {
+    return;
+  }
 
-  stopRaceSimulation();
+  try {
+    await RaceFirebase
+      .stopRace();
 
-  raceState =
-    "STOPPED";
-
-  players.forEach(player => {
-    if (
-      player.raceStatus ===
-      "RACING"
-    ) {
-      player.raceStatus =
-        "STOPPED";
-
-      player.speed =
-        0;
-    }
-  });
-
-  saveRaceConfig();
-
-  updateRaceStatus();
-  renderAll();
-
-  showToast(
-    "Perlumbaan dihentikan."
-  );
-}
-
-function resetRace() {
-  const confirmed =
-    window.confirm(
-      "Reset semua data perlumbaan?"
+    showToast(
+      "Perlumbaan dihentikan."
     );
 
-  if (!confirmed) return;
-
-  stopRaceSimulation();
-
-  raceState =
-    "WAITING";
-
-  players.forEach(player => {
-    player.ready =
-      false;
-
-    player.score =
-      0;
-
-    player.progress =
-      0;
-
-    player.correctAnswers =
-      0;
-
-    player.wrongAnswers =
-      0;
-
-    player.currentQuestion =
-      0;
-
-    player.speed =
-      0;
-
-    player.raceStatus =
-      "WAITING";
-
-    saveLocalPlayerState(
-      player
+  } catch (error) {
+    showFirebaseError(
+      "Perlumbaan gagal dihentikan.",
+      error
     );
-  });
-
-  localStorage.removeItem(
-    RACE_STATE_KEY
-  );
-
-  saveRaceConfig();
-
-  renderAll();
-
-  showToast(
-    "Perlumbaan telah direset."
-  );
-}
-
-function stopRaceSimulation() {
-  if (
-    raceSimulationTimer
-  ) {
-    window.clearInterval(
-      raceSimulationTimer
-    );
-
-    raceSimulationTimer =
-      null;
   }
 }
 
+
+/* =========================================================
+   RESET
+========================================================= */
+
+async function resetRace() {
+  const confirmed =
+    window.confirm(
+      "Reset semua status dan keputusan perlumbaan?"
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    await RaceFirebase
+      .resetRace();
+
+    showToast(
+      "Perlumbaan berjaya direset."
+    );
+
+  } catch (error) {
+    showFirebaseError(
+      "Reset perlumbaan gagal.",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   SELARASKAN PAPARAN CONTROL
+========================================================= */
+
+function synchroniseControlDisplay() {
+  const controlKp =
+    raceControl.selectedKp;
+
+  if (
+    Array.isArray(controlKp) &&
+    controlKp.length > 0
+  ) {
+    selectedKp =
+      controlKp.map(Number);
+
+    createKpButtons();
+  }
+
+  if (
+    Number(
+      raceControl.questionCount
+    )
+  ) {
+    selectedQuestionCount =
+      Number(
+        raceControl.questionCount
+      );
+
+    document
+      .querySelectorAll(
+        ".count-button"
+      )
+      .forEach(button => {
+        button.classList.toggle(
+          "selected",
+
+          Number(
+            button.dataset.count
+          ) ===
+            selectedQuestionCount
+        );
+      });
+  }
+}
+
+
+/* =========================================================
+   STATUS PERLUMBAAN
+========================================================= */
+
 function updateRaceStatus() {
+  const status =
+    raceControl.status ||
+    "WAITING";
+
   document.getElementById(
     "raceStatus"
   ).textContent =
-    translateRaceState(
-      raceState
+    translateRaceStatus(
+      status
     );
 
-  const connectionBadge =
-    document.getElementById(
-      "connectionStatus"
-    );
-
-  connectionBadge.textContent =
-    raceState === "RUNNING"
+  document.getElementById(
+    "connectionStatus"
+  ).textContent =
+    status === "RUNNING"
       ? "LIVE"
-      : "SIMULASI";
+      : "REALTIME";
 }
 
-function translateRaceState(
-  state
+
+function translateRaceStatus(
+  status
 ) {
   const labels = {
     WAITING:
       "MENUNGGU",
 
+    COUNTDOWN:
+      "COUNTDOWN",
+
     RUNNING:
       "BERLUMBA",
 
-    FINISHED:
-      "TAMAT",
-
     STOPPED:
-      "DIHENTIKAN"
+      "DIHENTIKAN",
+
+    FINISHED:
+      "TAMAT"
   };
 
-  return (
-    labels[state] ||
-    state
-  );
+  return labels[status] ||
+    status;
 }
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
 
 function toggleAudio() {
   audioEnabled =
     !audioEnabled;
 
   updateAudioButton();
-  saveRaceConfig();
+
+  saveLocalConfiguration();
 
   showToast(
     audioEnabled
@@ -1379,20 +1285,24 @@ function toggleAudio() {
   );
 }
 
-function updateAudioButton() {
-  const button =
-    document.getElementById(
-      "audioToggle"
-    );
 
-  button.textContent =
+function updateAudioButton() {
+  document.getElementById(
+    "audioToggle"
+  ).textContent =
     audioEnabled
       ? "🔊 AUDIO ON"
       : "🔇 AUDIO OFF";
 }
 
-function playCountdownSound() {
-  if (!audioEnabled) return;
+
+function playTone(
+  frequency,
+  duration
+) {
+  if (!audioEnabled) {
+    return;
+  }
 
   try {
     const audioContext =
@@ -1414,7 +1324,7 @@ function playCountdownSound() {
 
     oscillator.frequency
       .setValueAtTime(
-        520,
+        frequency,
         audioContext.currentTime
       );
 
@@ -1436,16 +1346,21 @@ function playCountdownSound() {
 
     oscillator.stop(
       audioContext.currentTime +
-      0.12
+      duration
     );
 
   } catch (error) {
     console.warn(
-      "Audio countdown gagal:",
+      "Audio gagal:",
       error
     );
   }
 }
+
+
+/* =========================================================
+   SKRIN PENUH & LOG KELUAR
+========================================================= */
 
 function toggleFullscreen() {
   if (
@@ -1461,37 +1376,79 @@ function toggleFullscreen() {
   }
 }
 
+
 function logoutAdmin() {
   const confirmed =
     window.confirm(
-      "Keluar dari Race Control Center?"
+      "Keluar daripada Race Control Center?"
     );
 
-  if (!confirmed) return;
+  if (!confirmed) {
+    return;
+  }
 
-  stopRaceSimulation();
-
-  sessionStorage.removeItem(
-    ADMIN_SESSION_KEY
-  );
+  RaceFirebase
+    .stopAllListeners();
 
   window.location.href =
     "index.html";
 }
 
-function randomBetween(
-  minimum,
-  maximum
+
+/* =========================================================
+   STATUS FIREBASE
+========================================================= */
+
+function setConnectionStatus(
+  text,
+  isError
 ) {
-  return Math.floor(
-    Math.random() *
-    (
-      maximum -
-      minimum +
-      1
-    )
-  ) + minimum;
+  const badge =
+    document.getElementById(
+      "connectionStatus"
+    );
+
+  badge.textContent =
+    text;
+
+  badge.style.background =
+    isError
+      ? "#be123c"
+      : "#6ee7b7";
+
+  badge.style.color =
+    isError
+      ? "#ffffff"
+      : "#052e25";
 }
+
+
+function showFirebaseError(
+  title,
+  error
+) {
+  console.error(
+    title,
+    error
+  );
+
+  setConnectionStatus(
+    "RALAT FIREBASE",
+    true
+  );
+
+  showToast(
+    `${title} ${
+      error?.message ||
+      ""
+    }`
+  );
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
 
 function showToast(
   message
@@ -1514,14 +1471,19 @@ function showToast(
 
   showToast.timer =
     window.setTimeout(
-      function () {
+      () => {
         toast.classList.add(
           "hidden"
         );
       },
-      2600
+      3000
     );
 }
+
+
+/* =========================================================
+   KESELAMATAN TEKS
+========================================================= */
 
 function escapeHtml(
   value
@@ -1544,10 +1506,22 @@ function escapeHtml(
     .replaceAll(
       '"',
       "&quot;"
+    )
+    .replaceAll(
+      "'",
+      "&#039;"
     );
 }
 
+
+/* =========================================================
+   BERSIHKAN LISTENER
+========================================================= */
+
 window.addEventListener(
   "beforeunload",
-  stopRaceSimulation
+  () => {
+    RaceFirebase
+      .stopAllListeners();
+  }
 );
