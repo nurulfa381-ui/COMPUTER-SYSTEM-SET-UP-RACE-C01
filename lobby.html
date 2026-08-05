@@ -1,0 +1,1677 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=5"
+  >
+
+  <meta
+    http-equiv="Cache-Control"
+    content="no-cache, no-store, must-revalidate"
+  >
+
+  <meta
+    http-equiv="Pragma"
+    content="no-cache"
+  >
+
+  <meta
+    http-equiv="Expires"
+    content="0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#03101c"
+  >
+
+  <title>Lobby — Computer System Set-Up Race C01</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css?v=20260805-race-lobby-1"
+  >
+
+  <style>
+    :root {
+      --lobby-bg: #020712;
+      --lobby-mid: #08243c;
+      --lobby-panel: rgba(7, 28, 46, 0.96);
+      --lobby-panel-light: rgba(18, 61, 95, 0.96);
+
+      --lobby-text: #ffffff;
+      --lobby-muted: #dbeafe;
+
+      --lobby-blue: #38bdf8;
+      --lobby-orange: #fbbf24;
+      --lobby-green: #34d399;
+      --lobby-red: #fb7185;
+
+      --lobby-border: #5a86aa;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    .lobby-page {
+      min-height: 100vh;
+
+      padding: 20px;
+
+      background:
+        radial-gradient(
+          circle at 10% 8%,
+          rgba(56, 189, 248, 0.17),
+          transparent 30%
+        ),
+        radial-gradient(
+          circle at 90% 10%,
+          rgba(251, 191, 36, 0.15),
+          transparent 30%
+        ),
+        linear-gradient(
+          135deg,
+          var(--lobby-bg),
+          var(--lobby-mid)
+        );
+    }
+
+    .lobby-shell {
+      width: min(1550px, 100%);
+
+      margin: 0 auto;
+    }
+
+    .lobby-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 18px;
+      flex-wrap: wrap;
+
+      padding: 26px;
+
+      border:
+        2px solid
+        var(--lobby-border);
+
+      border-radius: 26px;
+
+      background:
+        linear-gradient(
+          145deg,
+          var(--lobby-panel-light),
+          var(--lobby-panel)
+        );
+
+      box-shadow:
+        0 24px 70px
+        rgba(0, 0, 0, 0.42);
+    }
+
+    .eyebrow {
+      margin: 0;
+
+      color:
+        var(--lobby-blue);
+
+      font-weight: 800;
+      letter-spacing: 0.1em;
+    }
+
+    .lobby-header h1 {
+      margin: 8px 0 4px;
+
+      font-size:
+        clamp(
+          2.3rem,
+          5vw,
+          5rem
+        );
+
+      line-height: 1;
+    }
+
+    .lobby-header p {
+      margin: 8px 0 0;
+
+      color:
+        var(--lobby-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .header-button {
+      min-height: 50px;
+
+      padding: 11px 16px;
+
+      border:
+        2px solid
+        #60a5fa;
+
+      border-radius: 13px;
+
+      color: #ffffff;
+
+      background:
+        #1d4ed8;
+
+      font-weight: 800;
+    }
+
+    .header-button.danger {
+      border-color:
+        var(--lobby-red);
+
+      background:
+        #9f1239;
+    }
+
+    .status-panel {
+      display: grid;
+
+      grid-template-columns:
+        1.1fr 0.9fr;
+
+      gap: 18px;
+
+      margin-top: 18px;
+    }
+
+    .profile-card,
+    .race-status-card,
+    .players-panel,
+    .track-panel {
+      border:
+        2px solid
+        var(--lobby-border);
+
+      border-radius: 24px;
+
+      background:
+        linear-gradient(
+          145deg,
+          var(--lobby-panel-light),
+          var(--lobby-panel)
+        );
+
+      box-shadow:
+        0 18px 52px
+        rgba(0, 0, 0, 0.35);
+    }
+
+    .profile-card {
+      display: grid;
+
+      grid-template-columns:
+        auto 1fr;
+
+      gap: 18px;
+
+      align-items: center;
+
+      padding: 24px;
+    }
+
+    .car-avatar {
+      width: 130px;
+      height: 130px;
+
+      display: grid;
+      place-items: center;
+
+      border:
+        3px solid
+        var(--lobby-orange);
+
+      border-radius: 24px;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(56, 189, 248, 0.18),
+          rgba(2, 7, 18, 0.86)
+        );
+
+      font-size: 5rem;
+
+      animation:
+        idleCar
+        1.3s ease-in-out
+        infinite;
+    }
+
+    @keyframes idleCar {
+      0%,
+      100% {
+        transform:
+          translateY(0);
+      }
+
+      50% {
+        transform:
+          translateY(-6px);
+      }
+    }
+
+    .profile-card h2 {
+      margin: 0;
+
+      font-size:
+        clamp(
+          1.8rem,
+          4vw,
+          3rem
+        );
+    }
+
+    .profile-card p {
+      margin: 5px 0;
+
+      color:
+        var(--lobby-muted);
+    }
+
+    .profile-badges {
+      display: flex;
+      flex-wrap: wrap;
+
+      gap: 8px;
+
+      margin-top: 12px;
+    }
+
+    .profile-badge {
+      display: inline-block;
+
+      padding: 7px 11px;
+
+      border-radius: 999px;
+
+      color:
+        #111827;
+
+      background:
+        var(--lobby-orange);
+
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .race-status-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      gap: 12px;
+
+      padding: 24px;
+
+      text-align: center;
+    }
+
+    .status-light {
+      width: 22px;
+      height: 22px;
+
+      margin: 0 auto;
+
+      border-radius: 50%;
+
+      background:
+        var(--lobby-orange);
+
+      box-shadow:
+        0 0 22px
+        rgba(251, 191, 36, 0.72);
+
+      animation:
+        statusPulse
+        1.2s ease-in-out
+        infinite;
+    }
+
+    .status-light.approved {
+      background:
+        var(--lobby-green);
+
+      box-shadow:
+        0 0 22px
+        rgba(52, 211, 153, 0.78);
+    }
+
+    @keyframes statusPulse {
+      0%,
+      100% {
+        opacity: 0.55;
+        transform:
+          scale(0.9);
+      }
+
+      50% {
+        opacity: 1;
+        transform:
+          scale(1.15);
+      }
+    }
+
+    .race-status-card strong {
+      font-size:
+        clamp(
+          1.4rem,
+          3vw,
+          2.2rem
+        );
+    }
+
+    .race-status-card p {
+      margin: 0;
+
+      color:
+        var(--lobby-muted);
+    }
+
+    .ready-button {
+      min-height: 58px;
+
+      margin-top: 6px;
+      padding: 14px 20px;
+
+      border: 0;
+      border-radius: 15px;
+
+      color:
+        #111827;
+
+      background:
+        linear-gradient(
+          135deg,
+          #fde68a,
+          var(--lobby-orange)
+        );
+
+      font-weight: 900;
+    }
+
+    .ready-button.ready {
+      color: #052e25;
+
+      background:
+        linear-gradient(
+          135deg,
+          #a7f3d0,
+          var(--lobby-green)
+        );
+    }
+
+    .ready-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .main-grid {
+      display: grid;
+
+      grid-template-columns:
+        1.25fr 0.75fr;
+
+      gap: 18px;
+
+      margin-top: 18px;
+    }
+
+    .players-panel,
+    .track-panel {
+      padding: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 12px;
+      flex-wrap: wrap;
+
+      margin-bottom: 18px;
+    }
+
+    .section-header h2 {
+      margin: 6px 0 0;
+    }
+
+    .player-counter {
+      display: inline-block;
+
+      padding: 8px 12px;
+
+      border-radius: 999px;
+
+      color:
+        #111827;
+
+      background:
+        var(--lobby-orange);
+
+      font-weight: 900;
+    }
+
+    .player-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          5,
+          minmax(0, 1fr)
+        );
+
+      gap: 12px;
+    }
+
+    .player-slot {
+      min-height: 255px;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      padding: 16px;
+
+      border:
+        2px solid
+        var(--lobby-border);
+
+      border-radius: 18px;
+
+      background:
+        rgba(7, 28, 46, 0.82);
+
+      text-align: center;
+    }
+
+    .player-slot.empty {
+      opacity: 0.55;
+    }
+
+    .slot-number {
+      display: inline-grid;
+      place-items: center;
+
+      width: 42px;
+      height: 42px;
+
+      margin: 0 auto;
+
+      border-radius: 50%;
+
+      color:
+        #111827;
+
+      background:
+        var(--lobby-orange);
+
+      font-weight: 900;
+    }
+
+    .slot-car {
+      display: block;
+
+      margin: 12px 0;
+
+      font-size: 4rem;
+
+      animation:
+        idleCar
+        1.4s ease-in-out
+        infinite;
+    }
+
+    .slot-name {
+      display: block;
+
+      min-height: 46px;
+
+      font-weight: 900;
+    }
+
+    .slot-id {
+      display: block;
+
+      margin-top: 4px;
+
+      color:
+        var(--lobby-muted);
+
+      font-size: 0.82rem;
+    }
+
+    .slot-status {
+      display: inline-block;
+
+      margin-top: 10px;
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      color:
+        #422006;
+
+      background:
+        #fde68a;
+
+      font-size: 0.74rem;
+      font-weight: 900;
+    }
+
+    .slot-status.ready {
+      color:
+        #052e25;
+
+      background:
+        #6ee7b7;
+    }
+
+    .track-preview {
+      position: relative;
+
+      min-height: 460px;
+
+      overflow: hidden;
+
+      border:
+        3px solid
+        #94a3b8;
+
+      border-radius: 22px;
+
+      background:
+        radial-gradient(
+          ellipse at center,
+          #3f3f46 0 36%,
+          #18181b 37% 52%,
+          #166534 53% 100%
+        );
+
+      box-shadow:
+        inset 0 0 48px
+        rgba(0, 0, 0, 0.48);
+    }
+
+    .track-preview::before {
+      content: "";
+
+      position: absolute;
+
+      inset: 18% 12%;
+
+      border:
+        12px dashed
+        rgba(255, 255, 255, 0.76);
+
+      border-radius: 50%;
+
+      opacity: 0.8;
+    }
+
+    .track-preview::after {
+      content: "";
+
+      position: absolute;
+
+      left: 50%;
+      top: 7%;
+
+      width: 90px;
+      height: 86%;
+
+      transform:
+        translateX(-50%);
+
+      background:
+        repeating-linear-gradient(
+          0deg,
+          #ffffff 0 18px,
+          #111827 18px 36px
+        );
+
+      opacity: 0.92;
+    }
+
+    .track-title {
+      position: absolute;
+
+      z-index: 4;
+
+      left: 50%;
+      top: 50%;
+
+      transform:
+        translate(-50%, -50%);
+
+      padding: 12px 18px;
+
+      border:
+        2px solid
+        var(--lobby-border);
+
+      border-radius: 14px;
+
+      color:
+        #ffffff;
+
+      background:
+        rgba(2, 7, 18, 0.82);
+
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .track-cars {
+      position: absolute;
+      z-index: 5;
+
+      inset: 0;
+    }
+
+    .track-car {
+      position: absolute;
+
+      font-size: 2.8rem;
+
+      filter:
+        drop-shadow(
+          0 8px 5px
+          rgba(0, 0, 0, 0.48)
+        );
+
+      animation:
+        trackCarMove
+        4s linear
+        infinite;
+    }
+
+    .track-car:nth-child(1) {
+      left: 12%;
+      top: 48%;
+    }
+
+    .track-car:nth-child(2) {
+      right: 14%;
+      top: 25%;
+
+      animation-delay:
+        -0.8s;
+    }
+
+    .track-car:nth-child(3) {
+      right: 12%;
+      bottom: 23%;
+
+      animation-delay:
+        -1.6s;
+    }
+
+    .track-car:nth-child(4) {
+      left: 19%;
+      bottom: 15%;
+
+      animation-delay:
+        -2.4s;
+    }
+
+    .track-car:nth-child(5) {
+      left: 36%;
+      top: 13%;
+
+      animation-delay:
+        -3.2s;
+    }
+
+    @keyframes trackCarMove {
+      0%,
+      100% {
+        transform:
+          translateY(0)
+          rotateY(180deg);
+      }
+
+      50% {
+        transform:
+          translateY(-8px)
+          rotateY(180deg);
+      }
+    }
+
+    .lobby-message {
+      min-height: 28px;
+
+      margin: 16px 0 0;
+
+      color:
+        var(--lobby-orange);
+
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .engine-button {
+      width: 100%;
+      min-height: 52px;
+
+      margin-top: 14px;
+
+      border:
+        2px solid
+        var(--lobby-blue);
+
+      border-radius: 13px;
+
+      color: #ffffff;
+
+      background:
+        #1d4ed8;
+
+      font-weight: 800;
+    }
+
+    .engine-button.off {
+      border-color:
+        var(--lobby-red);
+
+      background:
+        #9f1239;
+    }
+
+    @media (max-width: 1200px) {
+      .status-panel,
+      .main-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .player-grid {
+        grid-template-columns:
+          repeat(
+            3,
+            minmax(0, 1fr)
+          );
+      }
+    }
+
+    @media (max-width: 760px) {
+      .lobby-page {
+        padding: 10px;
+      }
+
+      .lobby-header,
+      .profile-card,
+      .race-status-card,
+      .players-panel,
+      .track-panel {
+        padding: 18px;
+      }
+
+      .profile-card {
+        grid-template-columns:
+          1fr;
+
+        text-align: center;
+      }
+
+      .car-avatar {
+        margin: 0 auto;
+      }
+
+      .header-actions {
+        width: 100%;
+      }
+
+      .header-button {
+        width: 100%;
+      }
+
+      .player-grid {
+        grid-template-columns:
+          1fr;
+      }
+
+      .player-slot {
+        min-height: auto;
+      }
+
+      .track-preview {
+        min-height: 330px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="lobby-page">
+
+    <div class="lobby-shell">
+
+      <header class="lobby-header">
+
+        <div>
+
+          <p class="eyebrow">
+            COMPUTER SYSTEM SET-UP RACE • C01
+          </p>
+
+          <h1>
+            LOBBY PERLUMBAAN
+          </h1>
+
+          <p>
+            Tunggu kelulusan guru dan bersedia sebelum perlumbaan bermula.
+          </p>
+
+        </div>
+
+        <div class="header-actions">
+
+          <button
+            id="audioButton"
+            class="header-button"
+            type="button"
+          >
+            🔊 AUDIO ON
+          </button>
+
+          <button
+            class="header-button"
+            type="button"
+            onclick="toggleFullscreen()"
+          >
+            ⛶ SKRIN PENUH
+          </button>
+
+          <button
+            class="header-button danger"
+            type="button"
+            onclick="leaveLobby()"
+          >
+            KELUAR
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <section class="status-panel">
+
+        <article class="profile-card">
+
+          <div
+            id="playerCarAvatar"
+            class="car-avatar"
+          >
+            🏎️
+          </div>
+
+          <div>
+
+            <p class="eyebrow">
+              PROFIL PELUMBA
+            </p>
+
+            <h2 id="playerName">
+              -
+            </h2>
+
+            <p>
+              ID:
+              <strong id="playerId">
+                -
+              </strong>
+            </p>
+
+            <p id="playerCarName">
+              Formula Racer • Merah
+            </p>
+
+            <div class="profile-badges">
+
+              <span
+                id="playerNumber"
+                class="profile-badge"
+              >
+                #01
+              </span>
+
+              <span
+                id="playerLanguage"
+                class="profile-badge"
+              >
+                BM
+              </span>
+
+              <span class="profile-badge">
+                C01
+              </span>
+
+            </div>
+
+          </div>
+
+        </article>
+
+
+        <article class="race-status-card">
+
+          <div
+            id="approvalLight"
+            class="status-light"
+          ></div>
+
+          <strong id="approvalStatus">
+            MENUNGGU KELULUSAN GURU
+          </strong>
+
+          <p id="approvalDescription">
+            Guru perlu meluluskan nama anda sebelum butang Sedia diaktifkan.
+          </p>
+
+          <button
+            id="readyButton"
+            class="ready-button"
+            type="button"
+            disabled
+          >
+            BELUM DILULUSKAN
+          </button>
+
+        </article>
+
+      </section>
+
+
+      <section class="main-grid">
+
+        <article class="players-panel">
+
+          <div class="section-header">
+
+            <div>
+
+              <p class="eyebrow">
+                GRID PERMULAAN
+              </p>
+
+              <h2>
+                5 PEMAIN
+              </h2>
+
+            </div>
+
+            <span
+              id="playerCounter"
+              class="player-counter"
+            >
+              1 / 5
+            </span>
+
+          </div>
+
+          <div
+            id="playerGrid"
+            class="player-grid"
+          ></div>
+
+          <p
+            id="lobbyMessage"
+            class="lobby-message"
+          >
+            Menunggu pemain lain memasuki lobby...
+          </p>
+
+        </article>
+
+
+        <article class="track-panel">
+
+          <div class="section-header">
+
+            <div>
+
+              <p class="eyebrow">
+                LITAR PILIHAN
+              </p>
+
+              <h2>
+                C01 TECH CIRCUIT
+              </h2>
+
+            </div>
+
+          </div>
+
+          <div class="track-preview">
+
+            <div class="track-title">
+              🏁 C01 TECH CIRCUIT
+              <br>
+              5 GRID START
+            </div>
+
+            <div class="track-cars">
+              <span class="track-car">🏎️</span>
+              <span class="track-car">🚘</span>
+              <span class="track-car">🚗</span>
+              <span class="track-car">⚡</span>
+              <span class="track-car">🔥</span>
+            </div>
+
+          </div>
+
+          <button
+            id="engineButton"
+            class="engine-button"
+            type="button"
+          >
+            🔊 UJI BUNYI ENJIN
+          </button>
+
+        </article>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <script>
+    const PROFILE_KEY =
+      "c01_race_player_profile_v1";
+
+    let playerProfile =
+      null;
+
+    let audioContext =
+      null;
+
+    let engineOscillator =
+      null;
+
+    let engineGain =
+      null;
+
+    let engineRunning =
+      false;
+
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      initialiseLobby
+    );
+
+
+    function initialiseLobby() {
+      playerProfile =
+        getSavedProfile();
+
+      if (!playerProfile) {
+        window.location.href =
+          "login.html";
+
+        return;
+      }
+
+      renderPlayerProfile();
+      renderPlayerSlots();
+      initialiseButtons();
+      simulateTeacherApproval();
+    }
+
+
+    function getSavedProfile() {
+      try {
+        return JSON.parse(
+          localStorage.getItem(
+            PROFILE_KEY
+          ) || "null"
+        );
+      } catch (error) {
+        console.error(
+          "Profil pelajar gagal dibaca:",
+          error
+        );
+
+        return null;
+      }
+    }
+
+
+    function saveProfile() {
+      playerProfile.updatedAt =
+        new Date().toISOString();
+
+      localStorage.setItem(
+        PROFILE_KEY,
+        JSON.stringify(
+          playerProfile
+        )
+      );
+    }
+
+
+    function renderPlayerProfile() {
+      document.getElementById(
+        "playerName"
+      ).textContent =
+        playerProfile.name ||
+        "Pelajar";
+
+      document.getElementById(
+        "playerId"
+      ).textContent =
+        playerProfile.studentId ||
+        "-";
+
+      document.getElementById(
+        "playerCarAvatar"
+      ).textContent =
+        playerProfile.carIcon ||
+        "🏎️";
+
+      const modelName =
+        playerProfile.language === "en"
+          ? playerProfile.carModelNameEn
+          : playerProfile.carModelNameMs;
+
+      const colourName =
+        playerProfile.language === "en"
+          ? playerProfile.carColourNameEn
+          : playerProfile.carColourNameMs;
+
+      document.getElementById(
+        "playerCarName"
+      ).textContent =
+        `${modelName || "Formula Racer"} • ${colourName || "Merah"}`;
+
+      document.getElementById(
+        "playerNumber"
+      ).textContent =
+        `#${playerProfile.carNumber || "01"}`;
+
+      document.getElementById(
+        "playerLanguage"
+      ).textContent =
+        playerProfile.language === "en"
+          ? "EN"
+          : "BM";
+    }
+
+
+    function renderPlayerSlots() {
+      const playerGrid =
+        document.getElementById(
+          "playerGrid"
+        );
+
+      const demoPlayers = [
+        {
+          name:
+            playerProfile.name,
+
+          studentId:
+            playerProfile.studentId,
+
+          carIcon:
+            playerProfile.carIcon,
+
+          ready:
+            playerProfile.ready === true
+        },
+
+        null,
+        null,
+        null,
+        null
+      ];
+
+      playerGrid.innerHTML =
+        demoPlayers
+          .map(
+            (
+              player,
+              index
+            ) =>
+              createPlayerSlot(
+                player,
+                index
+              )
+          )
+          .join("");
+
+      const activePlayers =
+        demoPlayers.filter(
+          Boolean
+        ).length;
+
+      document.getElementById(
+        "playerCounter"
+      ).textContent =
+        `${activePlayers} / 5`;
+    }
+
+
+    function createPlayerSlot(
+      player,
+      index
+    ) {
+      if (!player) {
+        return `
+          <article class="player-slot empty">
+
+            <span class="slot-number">
+              ${index + 1}
+            </span>
+
+            <span class="slot-car">
+              🏁
+            </span>
+
+            <strong class="slot-name">
+              SLOT KOSONG
+            </strong>
+
+            <span class="slot-id">
+              Menunggu pemain
+            </span>
+
+            <span class="slot-status">
+              BELUM MASUK
+            </span>
+
+          </article>
+        `;
+      }
+
+      return `
+        <article class="player-slot">
+
+          <span class="slot-number">
+            ${index + 1}
+          </span>
+
+          <span class="slot-car">
+            ${escapeHtml(
+              player.carIcon ||
+              "🏎️"
+            )}
+          </span>
+
+          <strong class="slot-name">
+            ${escapeHtml(
+              player.name ||
+              "Pelajar"
+            )}
+          </strong>
+
+          <span class="slot-id">
+            ${escapeHtml(
+              player.studentId ||
+              "-"
+            )}
+          </span>
+
+          <span class="slot-status ${
+            player.ready
+              ? "ready"
+              : ""
+          }">
+            ${
+              player.ready
+                ? "SEDIA"
+                : "MENUNGGU"
+            }
+          </span>
+
+        </article>
+      `;
+    }
+
+
+    function initialiseButtons() {
+      const readyButton =
+        document.getElementById(
+          "readyButton"
+        );
+
+      readyButton.addEventListener(
+        "click",
+        toggleReady
+      );
+
+      document.getElementById(
+        "audioButton"
+      ).addEventListener(
+        "click",
+        toggleAudio
+      );
+
+      document.getElementById(
+        "engineButton"
+      ).addEventListener(
+        "click",
+        toggleEngineSound
+      );
+    }
+
+
+    function simulateTeacherApproval() {
+      window.setTimeout(
+        function () {
+          playerProfile.approved =
+            true;
+
+          saveProfile();
+
+          updateApprovalDisplay();
+        },
+        1800
+      );
+    }
+
+
+    function updateApprovalDisplay() {
+      const approvalLight =
+        document.getElementById(
+          "approvalLight"
+        );
+
+      const approvalStatus =
+        document.getElementById(
+          "approvalStatus"
+        );
+
+      const approvalDescription =
+        document.getElementById(
+          "approvalDescription"
+        );
+
+      const readyButton =
+        document.getElementById(
+          "readyButton"
+        );
+
+      if (playerProfile.approved) {
+        approvalLight.classList.add(
+          "approved"
+        );
+
+        approvalStatus.textContent =
+          "DILULUSKAN OLEH GURU";
+
+        approvalDescription.textContent =
+          "Tekan butang Sedia apabila anda bersedia untuk berlumba.";
+
+        readyButton.disabled =
+          false;
+
+        readyButton.textContent =
+          playerProfile.ready
+            ? "ANDA SUDAH SEDIA"
+            : "SAYA BERSEDIA";
+
+        readyButton.classList.toggle(
+          "ready",
+          playerProfile.ready === true
+        );
+      }
+    }
+
+
+    function toggleReady() {
+      if (!playerProfile.approved) {
+        return;
+      }
+
+      playerProfile.ready =
+        !playerProfile.ready;
+
+      saveProfile();
+
+      updateApprovalDisplay();
+      renderPlayerSlots();
+
+      document.getElementById(
+        "lobbyMessage"
+      ).textContent =
+        playerProfile.ready
+          ? "Anda sudah bersedia. Menunggu guru memulakan perlumbaan..."
+          : "Status Sedia dibatalkan.";
+    }
+
+
+    function toggleAudio() {
+      playerProfile.audioEnabled =
+        !playerProfile.audioEnabled;
+
+      saveProfile();
+
+      const audioButton =
+        document.getElementById(
+          "audioButton"
+        );
+
+      audioButton.textContent =
+        playerProfile.audioEnabled
+          ? "🔊 AUDIO ON"
+          : "🔇 AUDIO OFF";
+
+      if (
+        !playerProfile.audioEnabled &&
+        engineRunning
+      ) {
+        stopEngineSound();
+      }
+    }
+
+
+    function toggleEngineSound() {
+      if (
+        playerProfile.audioEnabled ===
+        false
+      ) {
+        document.getElementById(
+          "lobbyMessage"
+        ).textContent =
+          "Aktifkan audio dahulu.";
+
+        return;
+      }
+
+      if (engineRunning) {
+        stopEngineSound();
+      } else {
+        startEngineSound();
+      }
+    }
+
+
+    function startEngineSound() {
+      try {
+        audioContext =
+          audioContext ||
+          new (
+            window.AudioContext ||
+            window.webkitAudioContext
+          )();
+
+        engineOscillator =
+          audioContext.createOscillator();
+
+        engineGain =
+          audioContext.createGain();
+
+        engineOscillator.type =
+          "sawtooth";
+
+        engineOscillator.frequency.setValueAtTime(
+          62,
+          audioContext.currentTime
+        );
+
+        engineOscillator.frequency.linearRampToValueAtTime(
+          115,
+          audioContext.currentTime +
+          1.1
+        );
+
+        engineGain.gain.setValueAtTime(
+          0.04,
+          audioContext.currentTime
+        );
+
+        engineOscillator.connect(
+          engineGain
+        );
+
+        engineGain.connect(
+          audioContext.destination
+        );
+
+        engineOscillator.start();
+
+        engineRunning =
+          true;
+
+        document.getElementById(
+          "engineButton"
+        ).textContent =
+          "⏹️ HENTIKAN BUNYI ENJIN";
+
+        document.getElementById(
+          "lobbyMessage"
+        ).textContent =
+          "Bunyi enjin sedang dimainkan.";
+
+      } catch (error) {
+        console.error(
+          error
+        );
+
+        document.getElementById(
+          "lobbyMessage"
+        ).textContent =
+          "Peranti tidak dapat memainkan bunyi enjin.";
+      }
+    }
+
+
+    function stopEngineSound() {
+      if (engineOscillator) {
+        try {
+          engineOscillator.stop();
+        } catch (error) {
+          console.warn(
+            error
+          );
+        }
+      }
+
+      engineOscillator =
+        null;
+
+      engineGain =
+        null;
+
+      engineRunning =
+        false;
+
+      document.getElementById(
+        "engineButton"
+      ).textContent =
+        "🔊 UJI BUNYI ENJIN";
+    }
+
+
+    function toggleFullscreen() {
+      if (
+        !document.fullscreenElement
+      ) {
+        document
+          .documentElement
+          .requestFullscreen?.();
+      } else {
+        document
+          .exitFullscreen?.();
+      }
+    }
+
+
+    function leaveLobby() {
+      const confirmed =
+        window.confirm(
+          "Keluar dari lobby dan kembali ke halaman login?"
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      stopEngineSound();
+
+      window.location.href =
+        "login.html";
+    }
+
+
+    function escapeHtml(
+      value
+    ) {
+      return String(
+        value ?? ""
+      )
+        .replaceAll(
+          "&",
+          "&amp;"
+        )
+        .replaceAll(
+          "<",
+          "&lt;"
+        )
+        .replaceAll(
+          ">",
+          "&gt;"
+        )
+        .replaceAll(
+          '"',
+          "&quot;"
+        );
+    }
+
+
+    window.addEventListener(
+      "beforeunload",
+      stopEngineSound
+    );
+  </script>
+
+</body>
+</html>
