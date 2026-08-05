@@ -1,11 +1,11 @@
 import {
   initializeApp
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-app.js";
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
 
 import {
   getAuth,
   signInAnonymously
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 
 import {
   getDatabase,
@@ -18,30 +18,30 @@ import {
   onValue,
   off,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.17.0/firebase-database.js";
+} from "https://www.gstatic.com/firebasejs/12.17.1/firebase-database.js";
 
 
 const firebaseConfig = {
   apiKey:
-    "AIzaSyDuLB8De88W-YZ8k4IMQN6ft9FcmB9Tz_M",
+    "AIzaSyCVQ3P4O1mlPl9GCznwTpX29lENmSx0uLk",
 
   authDomain:
-    "computer-system-set-up.firebaseapp.com",
+    "computer-system-set-up-race.firebaseapp.com",
 
   databaseURL:
-    "https://computer-system-set-up-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "https://computer-system-set-up-race-default-rtdb.asia-southeast1.firebasedatabase.app",
 
   projectId:
-    "computer-system-set-up",
+    "computer-system-set-up-race",
 
   storageBucket:
-    "computer-system-set-up.firebasestorage.app",
+    "computer-system-set-up-race.firebasestorage.app",
 
   messagingSenderId:
-    "295923403819",
+    "855710524264",
 
   appId:
-    "1:295923403819:web:0131bdc8220ee54b54ee6e"
+    "1:855710524264:web:f0fe2dc32cf7cc1c8cacdd"
 };
 
 
