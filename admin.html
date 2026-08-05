@@ -1,1 +1,407 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
 
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=5"
+  >
+
+  <meta
+    http-equiv="Cache-Control"
+    content="no-cache, no-store, must-revalidate"
+  >
+
+  <meta
+    name="theme-color"
+    content="#020712"
+  >
+
+  <title>Race Control Center — C01</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="admin.css?v=20260805-admin-1"
+  >
+</head>
+
+<body>
+
+  <main class="admin-page">
+
+    <header class="admin-header">
+
+      <div>
+
+        <p class="eyebrow">
+          COMPUTER SYSTEM SET-UP RACE • C01
+        </p>
+
+        <h1>
+          RACE CONTROL CENTER
+        </h1>
+
+        <p class="subtitle">
+          Kawal pemain, pilih modul, tetapkan soalan dan mulakan perlumbaan.
+        </p>
+
+      </div>
+
+      <div class="header-actions">
+
+        <button
+          id="audioToggle"
+          class="btn btn-secondary"
+          type="button"
+        >
+          🔊 AUDIO ON
+        </button>
+
+        <button
+          id="fullscreenButton"
+          class="btn btn-secondary"
+          type="button"
+        >
+          ⛶ SKRIN PENUH
+        </button>
+
+        <button
+          id="logoutButton"
+          class="btn btn-danger"
+          type="button"
+        >
+          LOG KELUAR
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <section class="top-stats">
+
+      <article class="stat-card">
+        <span>Jumlah Pemain</span>
+        <strong id="totalPlayers">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Diluluskan</span>
+        <strong id="approvedPlayers">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Sedia</span>
+        <strong id="readyPlayers">0</strong>
+      </article>
+
+      <article class="stat-card">
+        <span>Status Perlumbaan</span>
+        <strong id="raceStatus">MENUNGGU</strong>
+      </article>
+
+    </section>
+
+
+    <section class="dashboard-grid">
+
+      <article class="panel player-panel">
+
+        <div class="section-header">
+
+          <div>
+
+            <p class="eyebrow">
+              GRID PEMAIN
+            </p>
+
+            <h2>
+              5 SLOT PERLUMBAAN
+            </h2>
+
+          </div>
+
+          <span
+            id="playerCounter"
+            class="counter-badge"
+          >
+            0 / 5
+          </span>
+
+        </div>
+
+        <div
+          id="playerGrid"
+          class="player-grid"
+        ></div>
+
+      </article>
+
+
+      <article class="panel setup-panel">
+
+        <div class="section-header">
+
+          <div>
+
+            <p class="eyebrow">
+              RACE SETUP
+            </p>
+
+            <h2>
+              TETAPAN PERLUMBAAN
+            </h2>
+
+          </div>
+
+        </div>
+
+
+        <section class="control-section">
+
+          <h3>
+            Pilih KP
+          </h3>
+
+          <div
+            id="kpSelector"
+            class="kp-grid"
+          ></div>
+
+        </section>
+
+
+        <section class="control-section">
+
+          <h3>
+            Jenis Soalan
+          </h3>
+
+          <div class="question-type-grid">
+
+            <label class="check-card">
+              <input
+                type="checkbox"
+                value="mcq"
+                checked
+              >
+              <span>MCQ</span>
+            </label>
+
+            <label class="check-card">
+              <input
+                type="checkbox"
+                value="dragdrop"
+                checked
+              >
+              <span>Drag & Drop</span>
+            </label>
+
+            <label class="check-card">
+              <input
+                type="checkbox"
+                value="matching"
+                checked
+              >
+              <span>Matching</span>
+            </label>
+
+            <label class="check-card">
+              <input
+                type="checkbox"
+                value="sequence"
+                checked
+              >
+              <span>Sequence</span>
+            </label>
+
+            <label class="check-card">
+              <input
+                type="checkbox"
+                value="truefalse"
+                checked
+              >
+              <span>True / False</span>
+            </label>
+
+          </div>
+
+        </section>
+
+
+        <section class="control-section">
+
+          <h3>
+            Bilangan Soalan
+          </h3>
+
+          <div class="question-count-grid">
+
+            <button
+              class="count-button selected"
+              type="button"
+              data-count="10"
+            >
+              10
+            </button>
+
+            <button
+              class="count-button"
+              type="button"
+              data-count="20"
+            >
+              20
+            </button>
+
+            <button
+              class="count-button"
+              type="button"
+              data-count="30"
+            >
+              30
+            </button>
+
+            <button
+              class="count-button"
+              type="button"
+              data-count="40"
+            >
+              40
+            </button>
+
+            <button
+              class="count-button"
+              type="button"
+              data-count="50"
+            >
+              50
+            </button>
+
+          </div>
+
+        </section>
+
+
+        <section class="control-section">
+
+          <h3>
+            Kawalan Perlumbaan
+          </h3>
+
+          <div class="race-actions">
+
+            <button
+              id="startRaceButton"
+              class="btn btn-start"
+              type="button"
+            >
+              🏁 MULA PERLUMBAAN
+            </button>
+
+            <button
+              id="resetRaceButton"
+              class="btn btn-warning"
+              type="button"
+            >
+              RESET
+            </button>
+
+            <button
+              id="stopRaceButton"
+              class="btn btn-danger"
+              type="button"
+            >
+              STOP
+            </button>
+
+          </div>
+
+        </section>
+
+      </article>
+
+    </section>
+
+
+    <section class="panel live-panel">
+
+      <div class="section-header">
+
+        <div>
+
+          <p class="eyebrow">
+            LIVE CONTROL
+          </p>
+
+          <h2>
+            PRESTASI MASA NYATA
+          </h2>
+
+        </div>
+
+        <span
+          id="connectionStatus"
+          class="connection-badge"
+        >
+          SIMULASI
+        </span>
+
+      </div>
+
+      <div
+        id="liveMonitor"
+        class="live-monitor"
+      ></div>
+
+    </section>
+
+  </main>
+
+
+  <div
+    id="countdownOverlay"
+    class="countdown-overlay hidden"
+  >
+
+    <div class="countdown-box">
+
+      <div class="race-lights">
+
+        <span class="race-light"></span>
+        <span class="race-light"></span>
+        <span class="race-light"></span>
+        <span class="race-light green"></span>
+
+      </div>
+
+      <strong id="countdownText">
+        3
+      </strong>
+
+    </div>
+
+  </div>
+
+
+  <div
+    id="toast"
+    class="toast hidden"
+  ></div>
+
+
+  <script
+    src="admin.js?v=20260805-admin-1"
+  ></script>
+
+</body>
+</html>
