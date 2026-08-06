@@ -888,7 +888,7 @@
             type="button"
             onclick="leaveRace()"
           >
-            KELUAR
+            LOG KELUAR PELAJAR
           </button>
 
         </div>
@@ -1119,6 +1119,8 @@
       true;
 
     let raceQuestions = [];
+
+    let effectiveQuestionCount = 0;
 
 
     document.addEventListener(
@@ -1399,6 +1401,14 @@
         questionCount: Number(raceControl.questionCount || 10)
       });
 
+      effectiveQuestionCount = raceQuestions.length;
+
+      if (effectiveQuestionCount === 0) {
+        answeringLocked = true;
+        showMessage("Tiada soalan unik tersedia untuk pilihan guru.");
+        return;
+      }
+
       showQuestion();
 
       showMessage(
@@ -1409,10 +1419,9 @@
 
     function showQuestion() {
       const questionCount =
-        Number(
-          raceControl.questionCount ||
-          10
-        );
+        effectiveQuestionCount ||
+        raceQuestions.length ||
+        0;
 
       if (
         currentQuestionIndex >=
@@ -1436,8 +1445,7 @@
 
       const question =
         raceQuestions[
-          currentQuestionIndex %
-          raceQuestions.length
+          currentQuestionIndex
         ];
 
       const shuffled =
@@ -1654,10 +1662,9 @@
       currentQuestionIndex++;
 
       const questionCount =
-        Number(
-          raceControl.questionCount ||
-          10
-        );
+        effectiveQuestionCount ||
+        raceQuestions.length ||
+        0;
 
       const answered =
         correctAnswers +
@@ -2206,18 +2213,27 @@
       async function () {
         const confirmed =
           window.confirm(
-            "Keluar daripada perlumbaan?"
+            "Log keluar daripada permainan dan kembali ke halaman login?"
           );
 
         if (!confirmed) {
           return;
         }
 
-        RaceFirebase
-          .stopAllListeners();
+        try {
+          await RaceFirebase.leaveLobby();
+        } catch (error) {
+          console.warn("Rekod lobby gagal dibuang:", error);
+        }
+
+        RaceFirebase.stopAllListeners();
+
+        localStorage.removeItem(PROFILE_KEY);
+        localStorage.removeItem("c01_race_player_uid_v1");
+        sessionStorage.removeItem("c01_race_session");
 
         window.location.href =
-          "lobby.html";
+          "login.html?logout=1";
       };
 
 
