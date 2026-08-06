@@ -1070,7 +1070,6 @@
   <script type="module">
 
     import { RaceFirebase } from "./race-firebase.js?v=20260806-race-bank-1";
-    import { prepareRaceQuestions } from "./questions/question-bank.js?v=20260806-race-bank-1";
     import { RaceAudio } from "./audio-engine.js?v=20260806-audio-stable-1";
 
 
@@ -1122,6 +1121,24 @@
     let raceQuestions = [];
 
     let effectiveQuestionCount = 0;
+
+    let prepareRaceQuestions = null;
+
+    const questionBankReady = import(
+      "./questions/question-bank.js?v=20260806-question-display-fix-1"
+    )
+      .then(module => {
+        if (typeof module.prepareRaceQuestions !== "function") {
+          throw new Error("Fungsi prepareRaceQuestions tidak ditemui.");
+        }
+
+        prepareRaceQuestions = module.prepareRaceQuestions;
+        return true;
+      })
+      .catch(error => {
+        console.error("Bank soalan gagal dimuatkan:", error);
+        return false;
+      });
 
 
     document.addEventListener(
@@ -1372,7 +1389,7 @@
     }
 
 
-    function activateRace() {
+    async function activateRace() {
       raceActivated =
         true;
 
@@ -1396,6 +1413,32 @@
 
       progress =
         0;
+
+      const bankLoaded =
+        await questionBankReady;
+
+      if (
+        !bankLoaded ||
+        typeof prepareRaceQuestions !== "function"
+      ) {
+        answeringLocked = true;
+
+        document.getElementById(
+          "questionTitle"
+        ).textContent =
+          "BANK SOALAN GAGAL DIMUATKAN";
+
+        document.getElementById(
+          "questionText"
+        ).textContent =
+          "Pastikan fail questions/question-bank.js berada dalam folder questions di GitHub.";
+
+        showMessage(
+          "Bank soalan tidak dapat dibaca. Muat semula selepas GitHub Pages selesai deploy."
+        );
+
+        return;
+      }
 
       raceQuestions = prepareRaceQuestions({
         selectedKp: Array.isArray(raceControl.selectedKp) ? raceControl.selectedKp : [1],
@@ -1465,12 +1508,15 @@
       document.getElementById(
         "questionTitle"
       ).textContent =
-        question.title;
+        question.title ||
+        `Soalan KP${String(question.kp || "").padStart(2, "0")}`;
 
       document.getElementById(
         "questionText"
       ).textContent =
-        question.question || question.text;
+        question.question ||
+        question.text ||
+        "Soalan tidak dapat dipaparkan.";
 
       const answerGrid =
         document.getElementById(
