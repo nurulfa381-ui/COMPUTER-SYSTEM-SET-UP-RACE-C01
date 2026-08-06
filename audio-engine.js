@@ -1,329 +1,133 @@
-/* =========================================================
-   COMPUTER SYSTEM SET-UP RACE C01
-   AUDIO ENGINE — STABLE WEB AUDIO VERSION
-   Tidak memerlukan fail MP3.
-========================================================= */
-
-const AUDIO_STORAGE_KEY = "c01_race_audio_enabled_v1";
+/* C01 Race Audio Engine — real WAV assets + Web Audio fallback */
+const AUDIO_STORAGE_KEY = "c01_race_audio_enabled_v2";
+const AUDIO_BASE = "./audio/";
 
 class C01RaceAudioEngine {
   constructor() {
+    this.enabled = localStorage.getItem(AUDIO_STORAGE_KEY) !== "false";
     this.context = null;
     this.masterGain = null;
-    this.engineOscillators = [];
-    this.engineGain = null;
+    this.engine = null;
     this.engineRunning = false;
-    this.enabled = localStorage.getItem(AUDIO_STORAGE_KEY) !== "false";
+    this.effects = {};
+    this.unlocked = false;
+    this.files = {
+      countdown: "countdown.wav", go: "go.wav", correct: "correct.wav",
+      wrong: "wrong.wav", turbo: "turbo.wav", brake: "brake.wav",
+      victory: "victory.wav", finish: "finish.wav", crowd: "crowd.wav"
+    };
   }
 
   async initialise() {
-    if (!this.enabled) return false;
-
     try {
-      if (!this.context) {
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) throw new Error("Web Audio API tidak disokong.");
-
-        this.context = new AudioContextClass();
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC && !this.context) {
+        this.context = new AC();
         this.masterGain = this.context.createGain();
         this.masterGain.gain.value = 0.55;
         this.masterGain.connect(this.context.destination);
       }
-
-      if (this.context.state === "suspended") {
-        await this.context.resume();
-      }
-
+      if (this.context?.state === "suspended") await this.context.resume();
+      this.unlocked = true;
       return true;
     } catch (error) {
-      console.error("Audio Engine gagal dimulakan:", error);
+      console.warn("Audio initialise gagal:", error);
       return false;
     }
   }
 
-  async setEnabled(enabled) {
-    this.enabled = Boolean(enabled);
+  async setEnabled(value) {
+    this.enabled = Boolean(value);
     localStorage.setItem(AUDIO_STORAGE_KEY, String(this.enabled));
+    if (!this.enabled) this.stopAll();
+    else await this.initialise();
+    return this.enabled;
+  }
 
-    if (!this.enabled) {
-      this.stopEngine();
-      if (this.masterGain && this.context) {
-        this.masterGain.gain.setTargetAtTime(0, this.context.currentTime, 0.03);
-      }
-      return;
-    }
+  async toggle() { return this.setEnabled(!this.enabled); }
+  isEnabled() { return this.enabled; }
 
+  createAudio(name, loop=false) {
+    const a = new Audio(`${AUDIO_BASE}${name}`);
+    a.preload = "auto";
+    a.loop = loop;
+    a.playsInline = true;
+    return a;
+  }
+
+  async playFile(key, volume=.8) {
+    if (!this.enabled) return false;
     await this.initialise();
-    if (this.masterGain && this.context) {
-      this.masterGain.gain.setTargetAtTime(0.55, this.context.currentTime, 0.03);
+    const filename = this.files[key] || key;
+    try {
+      const a = this.createAudio(filename, false);
+      a.volume = Math.max(0, Math.min(1, volume));
+      this.effects[key] = a;
+      await a.play();
+      return true;
+    } catch (error) {
+      console.warn(`Fail audio ${filename} gagal, guna fallback:`, error);
+      return this.playTone({frequency: key === "wrong" ? 180 : 620, duration:.25, type:"square", volume:.08});
     }
   }
 
-  async toggle() {
-    await this.setEnabled(!this.enabled);
-    return this.enabled;
+  async playTone({frequency=440,duration=.2,type="sine",volume=.08,endFrequency=null}={}) {
+    if (!this.enabled || !(await this.initialise()) || !this.context) return false;
+    const o=this.context.createOscillator(), g=this.context.createGain();
+    o.type=type; o.frequency.setValueAtTime(frequency,this.context.currentTime);
+    if(Number.isFinite(endFrequency)) o.frequency.exponentialRampToValueAtTime(Math.max(1,endFrequency),this.context.currentTime+duration);
+    g.gain.setValueAtTime(.0001,this.context.currentTime);
+    g.gain.exponentialRampToValueAtTime(Math.max(.0001,volume),this.context.currentTime+.02);
+    g.gain.exponentialRampToValueAtTime(.0001,this.context.currentTime+duration);
+    o.connect(g); g.connect(this.masterGain); o.start(); o.stop(this.context.currentTime+duration+.03); return true;
   }
 
-  isEnabled() {
-    return this.enabled;
-  }
+  playCountdown(){ return this.playFile("countdown",.8); }
+  playGo(){ return this.playFile("go",.85); }
+  playCorrect(){ this.playFile("correct",.85); setTimeout(()=>this.playFile("turbo",.7),180); }
+  playWrong(){ this.playFile("wrong",.8); setTimeout(()=>this.playFile("brake",.75),90); }
+  playTurbo(){ return this.playFile("turbo",.8); }
+  playBrake(){ return this.playFile("brake",.8); }
+  playFinish(){ this.stopEngine(); return this.playFile("finish",.85); }
+  playVictory(){ this.stopEngine(); this.playFile("crowd",.5); return this.playFile("victory",.9); }
 
-  async playTone({
-    frequency = 440,
-    duration = 0.2,
-    type = "sine",
-    volume = 0.1,
-    endFrequency = null
-  } = {}) {
-    if (!this.enabled) return;
-    if (!(await this.initialise())) return;
-
-    const oscillator = this.context.createOscillator();
-    const gain = this.context.createGain();
-
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, this.context.currentTime);
-
-    if (Number.isFinite(endFrequency)) {
-      oscillator.frequency.exponentialRampToValueAtTime(
-        Math.max(1, endFrequency),
-        this.context.currentTime + duration
-      );
+  async startEngine({rpm=78,volume=.16}={}) {
+    if (!this.enabled) return false;
+    await this.initialise();
+    if (this.engineRunning && this.engine) return true;
+    try {
+      this.engine = this.createAudio("engine-race.wav", true);
+      this.engine.volume = Math.max(.03, Math.min(.35, volume));
+      this.engine.playbackRate = Math.max(.65, Math.min(1.5, rpm/90));
+      await this.engine.play();
+      this.engineRunning = true;
+      return true;
+    } catch (error) {
+      console.warn("Enjin WAV gagal:", error);
+      this.engineRunning = false;
+      return false;
     }
-
-    gain.gain.setValueAtTime(0.0001, this.context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(
-      Math.max(0.0001, volume),
-      this.context.currentTime + 0.02
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      0.0001,
-      this.context.currentTime + duration
-    );
-
-    oscillator.connect(gain);
-    gain.connect(this.masterGain);
-    oscillator.start();
-    oscillator.stop(this.context.currentTime + duration + 0.03);
   }
 
-  playCountdown() {
-    return this.playTone({
-      frequency: 520,
-      endFrequency: 470,
-      duration: 0.14,
-      type: "square",
-      volume: 0.09
-    });
-  }
-
-  async playGo() {
-    await this.playTone({
-      frequency: 620,
-      endFrequency: 1120,
-      duration: 0.42,
-      type: "sawtooth",
-      volume: 0.13
-    });
-
-    window.setTimeout(() => {
-      this.playTone({
-        frequency: 880,
-        endFrequency: 1320,
-        duration: 0.28,
-        type: "square",
-        volume: 0.08
-      });
-    }, 90);
-  }
-
-  async playCorrect() {
-    await this.playTone({
-      frequency: 660,
-      duration: 0.14,
-      type: "sine",
-      volume: 0.09
-    });
-
-    window.setTimeout(() => {
-      this.playTone({
-        frequency: 880,
-        duration: 0.18,
-        type: "sine",
-        volume: 0.1
-      });
-    }, 110);
-
-    window.setTimeout(() => this.playTurbo(), 190);
-  }
-
-  async playWrong() {
-    await this.playTone({
-      frequency: 220,
-      endFrequency: 95,
-      duration: 0.36,
-      type: "sawtooth",
-      volume: 0.11
-    });
-
-    window.setTimeout(() => this.playBrake(), 70);
-  }
-
-  async playTurbo() {
-    if (!this.enabled || !(await this.initialise())) return;
-
-    const oscillator = this.context.createOscillator();
-    const gain = this.context.createGain();
-
-    oscillator.type = "sawtooth";
-    oscillator.frequency.setValueAtTime(120, this.context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(
-      680,
-      this.context.currentTime + 0.48
-    );
-
-    gain.gain.setValueAtTime(0.0001, this.context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.085, this.context.currentTime + 0.06);
-    gain.gain.exponentialRampToValueAtTime(0.0001, this.context.currentTime + 0.5);
-
-    oscillator.connect(gain);
-    gain.connect(this.masterGain);
-    oscillator.start();
-    oscillator.stop(this.context.currentTime + 0.52);
-  }
-
-  async playBrake() {
-    if (!this.enabled || !(await this.initialise())) return;
-
-    const duration = 0.42;
-    const sampleRate = this.context.sampleRate;
-    const buffer = this.context.createBuffer(1, sampleRate * duration, sampleRate);
-    const data = buffer.getChannelData(0);
-
-    for (let index = 0; index < data.length; index++) {
-      const fade = 1 - index / data.length;
-      data[index] = (Math.random() * 2 - 1) * fade;
-    }
-
-    const noise = this.context.createBufferSource();
-    const filter = this.context.createBiquadFilter();
-    const gain = this.context.createGain();
-
-    noise.buffer = buffer;
-    filter.type = "bandpass";
-    filter.frequency.value = 1450;
-    filter.Q.value = 4;
-    gain.gain.value = 0.11;
-
-    noise.connect(filter);
-    filter.connect(gain);
-    gain.connect(this.masterGain);
-    noise.start();
-  }
-
-  async startEngine({ rpm = 72, volume = 0.07 } = {}) {
-    if (!this.enabled || this.engineRunning) return;
-    if (!(await this.initialise())) return;
-
-    this.engineGain = this.context.createGain();
-    this.engineGain.gain.setValueAtTime(0.0001, this.context.currentTime);
-    this.engineGain.gain.exponentialRampToValueAtTime(
-      Math.max(0.001, volume),
-      this.context.currentTime + 0.3
-    );
-    this.engineGain.connect(this.masterGain);
-
-    const settings = [
-      { type: "sawtooth", multiplier: 1, gain: 0.72 },
-      { type: "square", multiplier: 2.02, gain: 0.18 },
-      { type: "triangle", multiplier: 3.05, gain: 0.1 }
-    ];
-
-    this.engineOscillators = settings.map((setting) => {
-      const oscillator = this.context.createOscillator();
-      const gainNode = this.context.createGain();
-      oscillator.type = setting.type;
-      oscillator.frequency.value = rpm * setting.multiplier;
-      gainNode.gain.value = setting.gain;
-      oscillator.connect(gainNode);
-      gainNode.connect(this.engineGain);
-      oscillator.start();
-      return { oscillator, multiplier: setting.multiplier };
-    });
-
-    this.engineRunning = true;
-  }
-
-  setEngineSpeed(speed = 80) {
-    if (!this.engineRunning || !this.context) return;
-
-    const numericSpeed = Math.max(0, Math.min(350, Number(speed) || 0));
-    const baseFrequency = 55 + numericSpeed * 0.55;
-
-    this.engineOscillators.forEach((item) => {
-      item.oscillator.frequency.setTargetAtTime(
-        baseFrequency * item.multiplier,
-        this.context.currentTime,
-        0.09
-      );
-    });
-
-    if (this.engineGain) {
-      const volume = 0.045 + (numericSpeed / 350) * 0.075;
-      this.engineGain.gain.setTargetAtTime(volume, this.context.currentTime, 0.08);
-    }
+  setEngineSpeed(speed=80) {
+    if (!this.engine) return;
+    const s=Math.max(0,Math.min(350,Number(speed)||0));
+    this.engine.playbackRate=Math.max(.7,Math.min(1.85,.72+s/310));
+    this.engine.volume=Math.max(.05,Math.min(.28,.08+s/1800));
   }
 
   stopEngine() {
-    if (!this.engineRunning) return;
-
-    try {
-      if (this.engineGain && this.context) {
-        this.engineGain.gain.setTargetAtTime(0.0001, this.context.currentTime, 0.05);
-      }
-
-      window.setTimeout(() => {
-        this.engineOscillators.forEach((item) => {
-          try {
-            item.oscillator.stop();
-          } catch (error) {
-            console.warn(error);
-          }
-        });
-        this.engineOscillators = [];
-        this.engineGain = null;
-        this.engineRunning = false;
-      }, 180);
-    } catch (error) {
-      console.warn("Enjin gagal dihentikan:", error);
-      this.engineOscillators = [];
-      this.engineGain = null;
-      this.engineRunning = false;
-    }
-  }
-
-  async playVictory() {
-    this.stopEngine();
-    const notes = [523, 659, 784, 1046, 1318];
-
-    notes.forEach((note, index) => {
-      window.setTimeout(() => {
-        this.playTone({
-          frequency: note,
-          duration: index === notes.length - 1 ? 0.65 : 0.24,
-          type: "triangle",
-          volume: 0.105
-        });
-      }, index * 150);
-    });
+    if (this.engine) { try { this.engine.pause(); this.engine.currentTime=0; } catch(_){} }
+    this.engine=null; this.engineRunning=false;
   }
 
   stopAll() {
     this.stopEngine();
+    Object.values(this.effects).forEach(a=>{try{a.pause();a.currentTime=0;}catch(_){}});
+    this.effects={};
   }
 }
 
 const RaceAudio = new C01RaceAudioEngine();
 window.RaceAudio = RaceAudio;
-
 export { C01RaceAudioEngine, RaceAudio };
