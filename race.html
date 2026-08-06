@@ -1071,6 +1071,7 @@
 
     import { RaceFirebase } from "./race-firebase.js?v=20260806-race-bank-1";
     import { prepareRaceQuestions } from "./questions/question-bank.js?v=20260806-race-bank-1";
+    import { RaceAudio } from "./audio-engine.js?v=20260806-audio-stable-1";
 
 
     const PROFILE_KEY =
@@ -1144,6 +1145,7 @@
         playerProfile.audioEnabled !==
         false;
 
+      await RaceAudio.setEnabled(audioEnabled);
       updateAudioButton();
 
       try {
@@ -1989,6 +1991,8 @@
           playerProgress,
           100
         )}%`;
+
+      RaceAudio.setEngineSpeed(playerSpeed);
     }
 
 
@@ -2054,9 +2058,8 @@
     }
 
 
-    function toggleAudio() {
-      audioEnabled =
-        !audioEnabled;
+    async function toggleAudio() {
+      audioEnabled = await RaceAudio.toggle();
 
       playerProfile.audioEnabled =
         audioEnabled;
@@ -2069,6 +2072,20 @@
       );
 
       updateAudioButton();
+
+      if (
+        audioEnabled &&
+        raceActivated
+      ) {
+        await RaceAudio.startEngine({
+          rpm: 78,
+          volume: 0.075
+        });
+
+        RaceAudio.setEngineSpeed(
+          speed
+        );
+      }
     }
 
 
@@ -2082,115 +2099,32 @@
     }
 
 
-    function createTone(
-      frequency,
-      duration,
-      type =
-        "sine",
-      volume =
-        0.04
-    ) {
-      if (!audioEnabled) {
-        return;
-      }
-
-      try {
-        const audioContext =
-          new (
-            window.AudioContext ||
-            window.webkitAudioContext
-          )();
-
-        const oscillator =
-          audioContext
-            .createOscillator();
-
-        const gain =
-          audioContext
-            .createGain();
-
-        oscillator.type =
-          type;
-
-        oscillator.frequency
-          .setValueAtTime(
-            frequency,
-            audioContext.currentTime
-          );
-
-        gain.gain
-          .setValueAtTime(
-            volume,
-            audioContext.currentTime
-          );
-
-        oscillator.connect(
-          gain
-        );
-
-        gain.connect(
-          audioContext.destination
-        );
-
-        oscillator.start();
-
-        oscillator.stop(
-          audioContext.currentTime +
-          duration
-        );
-
-      } catch (error) {
-        console.warn(
-          error
-        );
-      }
-    }
-
-
     function playCountdownSound() {
-      createTone(
-        520,
-        0.12,
-        "square"
-      );
+      RaceAudio.playCountdown();
     }
 
 
     function playStartSound() {
-      createTone(
-        880,
-        0.32,
-        "sawtooth",
-        0.05
-      );
+      RaceAudio.playGo();
+      RaceAudio.startEngine({
+        rpm: 78,
+        volume: 0.075
+      });
     }
 
 
     function playCorrectSound() {
-      createTone(
-        760,
-        0.2,
-        "sine"
-      );
+      RaceAudio.playCorrect();
     }
 
 
     function playWrongSound() {
-      createTone(
-        170,
-        0.28,
-        "square"
-      );
+      RaceAudio.playWrong();
     }
 
 
     function playVictorySound() {
-      createTone(
-        980,
-        0.55,
-        "sine",
-        0.06
-      );
+      RaceAudio.playVictory();
     }
 
 
@@ -2226,6 +2160,7 @@
           console.warn("Rekod lobby gagal dibuang:", error);
         }
 
+        RaceAudio.stopAll();
         RaceFirebase.stopAllListeners();
 
         localStorage.removeItem(PROFILE_KEY);
@@ -2265,6 +2200,7 @@
     window.addEventListener(
       "beforeunload",
       function () {
+        RaceAudio.stopAll();
         RaceFirebase
           .stopAllListeners();
       }
