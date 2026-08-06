@@ -1,0 +1,14 @@
+COMPUTER SYSTEM SET-UP RACE C01 — FIXED BUILD
+Tarikh: 2026-08-06
+
+Pembetulan:
+1. Soalan perlumbaan tidak diulang dalam satu sesi.
+2. Jumlah soalan sebenar mengikut bilangan soalan unik yang tersedia.
+3. Jawapan betul dibaca menggunakan correctAnswer dan kekal tepat selepas jawapan diacak.
+4. Butang LOG KELUAR PELAJAR disediakan pada race.html.
+5. Log keluar membuang pemain daripada Firebase lobby, memadam profil tempatan dan kembali ke login.html.
+6. Sambungan Firebase Realtime guru-pelajar dikekalkan.
+
+Fail utama terlibat:
+- race.html
+- questions/question-bank.js
