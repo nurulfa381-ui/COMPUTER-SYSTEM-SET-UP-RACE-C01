@@ -1,6 +1,6 @@
 import {
   RaceFirebase
-} from "./race-firebase.js?v=20260805-admin-firebase-2";
+} from "./race-firebase.js?v=20260806-final-lock-1";
 
 
 const RACE_CONFIG_KEY =
@@ -30,7 +30,7 @@ let audioEnabled = true;
 let teacherName =
   localStorage.getItem(
     ADMIN_NAME_KEY
-  ) || "Pegawai Penilai";
+  ) || "";
 
 
 /* =========================================================
@@ -44,6 +44,7 @@ document.addEventListener(
 
 
 async function initialiseAdmin() {
+  ensureTeacherName();
   loadLocalConfiguration();
 
   createKpButtons();
@@ -436,6 +437,15 @@ function initialiseMainButtons() {
 function initialiseHeaderButtons() {
   document
     .getElementById(
+      "teacherNameButton"
+    )
+    .addEventListener(
+      "click",
+      changeTeacherName
+    );
+
+  document
+    .getElementById(
       "audioToggle"
     )
     .addEventListener(
@@ -462,6 +472,86 @@ function initialiseHeaderButtons() {
     );
 
   updateAudioButton();
+  updateTeacherNameButton();
+}
+
+
+/* =========================================================
+   NAMA GURU
+========================================================= */
+
+function ensureTeacherName() {
+  if (teacherName.trim()) {
+    return;
+  }
+
+  const enteredName =
+    window.prompt(
+      "Masukkan nama guru / pegawai penilai:",
+      ""
+    );
+
+  teacherName =
+    String(enteredName || "Pegawai Penilai")
+      .trim() || "Pegawai Penilai";
+
+  localStorage.setItem(
+    ADMIN_NAME_KEY,
+    teacherName
+  );
+}
+
+
+function changeTeacherName() {
+  const enteredName =
+    window.prompt(
+      "Masukkan nama guru / pegawai penilai:",
+      teacherName
+    );
+
+  if (enteredName === null) {
+    return;
+  }
+
+  const cleanedName =
+    String(enteredName).trim();
+
+  if (!cleanedName) {
+    showToast(
+      "Nama guru tidak boleh kosong."
+    );
+
+    return;
+  }
+
+  teacherName =
+    cleanedName;
+
+  localStorage.setItem(
+    ADMIN_NAME_KEY,
+    teacherName
+  );
+
+  updateTeacherNameButton();
+
+  showToast(
+    `Nama guru ditukar kepada ${teacherName}.`
+  );
+}
+
+
+function updateTeacherNameButton() {
+  const button =
+    document.getElementById(
+      "teacherNameButton"
+    );
+
+  if (!button) {
+    return;
+  }
+
+  button.textContent =
+    `👩‍🏫 ${teacherName || "NAMA GURU"}`;
 }
 
 

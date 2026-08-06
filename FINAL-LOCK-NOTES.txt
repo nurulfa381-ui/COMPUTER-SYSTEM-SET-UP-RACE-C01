@@ -1,0 +1,10 @@
+COMPUTER SYSTEM SET-UP RACE C01 — FINAL LOCK
+
+Pembaikan:
+- Firebase COUNTDOWN -> RUNNING automatik
+- Bank soalan unik tanpa ulangan
+- Audio Web Audio API dengan buka sekatan melalui sentuhan pengguna
+- Butang nama guru dan simpan nama berbeza pada setiap peranti
+- Log keluar pelajar dan listener Firebase dikekalkan
+
+Upload semua kandungan folder ini ke root repository GitHub.
