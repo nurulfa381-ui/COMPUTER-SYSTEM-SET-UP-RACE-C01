@@ -1069,9 +1069,8 @@
 
   <script type="module">
 
-    import {
-      RaceFirebase
-    } from "./race-firebase.js?v=20260805-race-track-1";
+    import { RaceFirebase } from "./race-firebase.js?v=20260806-race-bank-1";
+    import { prepareRaceQuestions } from "./questions/question-bank.js?v=20260806-race-bank-1";
 
 
     const PROFILE_KEY =
@@ -1119,113 +1118,7 @@
     let audioEnabled =
       true;
 
-
-    const demoQuestions = [
-      {
-        title:
-          "Komponen Sistem Komputer",
-
-        text:
-          "Apakah fungsi utama CPU dalam sistem komputer?",
-
-        answers: [
-          "Memproses arahan dan data",
-          "Menyimpan fail secara kekal",
-          "Mencetak dokumen",
-          "Membekalkan sambungan Internet"
-        ],
-
-        correct:
-          0,
-
-        explanation:
-          "CPU melaksanakan arahan dan memproses data dalam sistem komputer."
-      },
-
-      {
-        title:
-          "Memori Komputer",
-
-        text:
-          "Apakah fungsi RAM?",
-
-        answers: [
-          "Menyimpan data sementara semasa program digunakan",
-          "Menyimpan data secara kekal tanpa kuasa",
-          "Mengawal bekalan kuasa",
-          "Menghubungkan komputer ke pencetak"
-        ],
-
-        correct:
-          0,
-
-        explanation:
-          "RAM menyimpan data sementara yang sedang digunakan oleh sistem."
-      },
-
-      {
-        title:
-          "Peralatan Pemasangan",
-
-        text:
-          "Alat yang sesuai untuk membuka skru casing komputer ialah:",
-
-        answers: [
-          "Pemutar skru",
-          "Multimeter",
-          "Penyepit kabel",
-          "Pencetak"
-        ],
-
-        correct:
-          0,
-
-        explanation:
-          "Pemutar skru digunakan untuk membuka dan memasang skru casing komputer."
-      },
-
-      {
-        title:
-          "POST",
-
-        text:
-          "Apakah tujuan Power-On Self-Test atau POST?",
-
-        answers: [
-          "Menguji perkakasan asas semasa komputer dihidupkan",
-          "Memadam semua fail pengguna",
-          "Memasang sistem operasi",
-          "Menyambung komputer ke Internet"
-        ],
-
-        correct:
-          0,
-
-        explanation:
-          "POST menyemak perkakasan asas seperti RAM, CPU dan papan induk."
-      },
-
-      {
-        title:
-          "Sistem Pengoperasian",
-
-        text:
-          "Sistem pengoperasian berfungsi untuk:",
-
-        answers: [
-          "Mengurus perkakasan dan perisian komputer",
-          "Menggantikan semua komponen komputer",
-          "Membekalkan kuasa elektrik",
-          "Menghasilkan kabel rangkaian"
-        ],
-
-        correct:
-          0,
-
-        explanation:
-          "Sistem pengoperasian mengurus sumber perkakasan dan menjalankan perisian."
-      }
-    ];
+    let raceQuestions = [];
 
 
     document.addEventListener(
@@ -1500,6 +1393,12 @@
       progress =
         0;
 
+      raceQuestions = prepareRaceQuestions({
+        selectedKp: Array.isArray(raceControl.selectedKp) ? raceControl.selectedKp : [1],
+        questionTypes: Array.isArray(raceControl.questionTypes) ? raceControl.questionTypes : ["mcq"],
+        questionCount: Number(raceControl.questionCount || 10)
+      });
+
       showQuestion();
 
       showMessage(
@@ -1525,10 +1424,7 @@
       }
 
       const question =
-        demoQuestions[
-          currentQuestionIndex %
-          demoQuestions.length
-        ];
+        raceQuestions[currentQuestionIndex % raceQuestions.length];
 
       const shuffled =
         shuffleAnswers(
@@ -1550,7 +1446,7 @@
       document.getElementById(
         "questionText"
       ).textContent =
-        question.text;
+        question.question || question.text;
 
       const answerGrid =
         document.getElementById(
