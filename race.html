@@ -872,7 +872,7 @@
             class="control-button"
             type="button"
           >
-            🔊 TEKAN AKTIFKAN AUDIO
+            🔊 AUDIO ON
           </button>
 
           <button
@@ -1069,7 +1069,7 @@
 
   <script type="module">
 
-    import { RaceFirebase } from "./race-firebase.js?v=20260806-final-lock-1";
+    import { RaceFirebase } from "./race-firebase.js?v=20260806-question-fix-7";
 
     /* Audio fallback: permainan terus berjalan walaupun audio gagal dimuatkan. */
     let RaceAudio = {
@@ -1086,7 +1086,7 @@
     };
 
     const audioEngineReady = import(
-      "./audio-engine.js?v=20260806-final-lock-1"
+      "./audio-engine.js?v=20260806-question-fix-7"
     )
       .then(module => {
         if (module.RaceAudio) {
@@ -1148,9 +1148,6 @@
     let audioEnabled =
       true;
 
-    let audioUnlocked =
-      false;
-
     let raceQuestions = [];
 
     let effectiveQuestionCount = 0;
@@ -1158,7 +1155,7 @@
     let prepareRaceQuestions = null;
 
     const questionBankReady = import(
-      "./questions/question-bank.js?v=20260806-final-lock-1"
+      "./questions/question-bank.js?v=20260806-question-display-fix-1"
     )
       .then(module => {
         if (typeof module.prepareRaceQuestions !== "function") {
@@ -1198,22 +1195,6 @@
       await audioEngineReady;
       await RaceAudio.setEnabled(audioEnabled);
       updateAudioButton();
-
-      const unlockAudioOnce = async () => {
-        await unlockAudioFromGesture();
-      };
-
-      document.addEventListener(
-        "pointerdown",
-        unlockAudioOnce,
-        { once: true }
-      );
-
-      document.addEventListener(
-        "touchstart",
-        unlockAudioOnce,
-        { once: true, passive: true }
-      );
 
       try {
         await RaceFirebase
@@ -2213,90 +2194,41 @@
     }
 
 
-    async function unlockAudioFromGesture() {
-      if (audioUnlocked) {
-        return true;
-      }
-
-      try {
-        audioEnabled = true;
-        await RaceAudio.setEnabled(true);
-        audioUnlocked = true;
-
-        playerProfile.audioEnabled = true;
-
-        localStorage.setItem(
-          PROFILE_KEY,
-          JSON.stringify(playerProfile)
-        );
-
-        updateAudioButton();
-        RaceAudio.playCountdown();
-
-        return true;
-      } catch (error) {
-        console.warn(
-          "Audio gagal dibuka:",
-          error
-        );
-
-        return false;
-      }
-    }
-
-
     async function toggleAudio() {
-      if (!audioUnlocked) {
-        await unlockAudioFromGesture();
-        return;
-      }
-
-      audioEnabled =
-        await RaceAudio.toggle();
+      audioEnabled = await RaceAudio.toggle();
 
       playerProfile.audioEnabled =
         audioEnabled;
 
       localStorage.setItem(
         PROFILE_KEY,
-        JSON.stringify(playerProfile)
+        JSON.stringify(
+          playerProfile
+        )
       );
 
       updateAudioButton();
 
-      if (audioEnabled) {
-        RaceAudio.playCountdown();
+      if (
+        audioEnabled &&
+        raceActivated
+      ) {
+        await RaceAudio.startEngine({
+          rpm: 78,
+          volume: 0.075
+        });
 
-        if (raceActivated) {
-          await RaceAudio.startEngine({
-            rpm: 78,
-            volume: 0.09
-          });
-
-          RaceAudio.setEngineSpeed(
-            Math.max(speed, 80)
-          );
-        }
-      } else {
-        RaceAudio.stopAll();
+        RaceAudio.setEngineSpeed(
+          speed
+        );
       }
     }
 
 
     function updateAudioButton() {
-      const button =
-        document.getElementById(
-          "audioButton"
-        );
-
-      if (!audioUnlocked) {
-        button.textContent =
-          "🔊 TEKAN AKTIFKAN AUDIO";
-
-        return;
-      }
-
-      button.textContent =
+      document.getElementById(
+        "audioButton"
+      ).textContent =
         audioEnabled
           ? "🔊 AUDIO ON"
           : "🔇 AUDIO OFF";

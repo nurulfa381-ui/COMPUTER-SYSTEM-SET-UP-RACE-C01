@@ -1,0 +1,8 @@
+UPLOAD KE GITHUB
+================
+1. Extract ZIP.
+2. Buka folder COMPUTER-SYSTEM-SET-UP-RACE-C01-main.
+3. Pilih SEMUA fail dan folder DI DALAM folder itu.
+4. Upload ke root/main repository GitHub.
+5. Pastikan folder assets/audio, assets/cars, assets/track dan assets/icons muncul di root.
+6. Pada telefon, tekan butang Audio atau sentuh skrin sekali untuk membenarkan bunyi.
