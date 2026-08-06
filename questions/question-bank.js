@@ -453,5 +453,5 @@ const C01_QUESTION_BANK = [
 ];
 
 function shuffleArray(items){const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function prepareRaceQuestions({selectedKp=[],questionTypes=[],questionCount=10}={}){let pool=C01_QUESTION_BANK.filter(q=>!selectedKp.length||selectedKp.map(Number).includes(Number(q.kp)));const typed=pool.filter(q=>!questionTypes.length||questionTypes.includes(q.type));if(typed.length)pool=typed;if(!pool.length)pool=[...C01_QUESTION_BANK];const out=[];while(out.length<questionCount){for(const q of shuffleArray(pool)){out.push({...q,answers:[...q.answers]});if(out.length>=questionCount)break;}}return out;}
+function prepareRaceQuestions({selectedKp=[],questionTypes=[],questionCount=10}={}){let pool=C01_QUESTION_BANK.filter(q=>!selectedKp.length||selectedKp.map(Number).includes(Number(q.kp)));const typed=pool.filter(q=>!questionTypes.length||questionTypes.includes(q.type));if(typed.length)pool=typed;if(!pool.length)return[];const unique=[...new Map(pool.map(q=>[q.id||`${q.kp}-${q.question}`,q])).values()];return shuffleArray(unique).slice(0,Math.min(Math.max(1,Number(questionCount)||10),unique.length)).map(q=>({...q,answers:[...q.answers]}));}
 export {C01_QUESTION_BANK,prepareRaceQuestions,shuffleArray};
