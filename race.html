@@ -1069,8 +1069,38 @@
 
   <script type="module">
 
-    import { RaceFirebase } from "./race-firebase.js?v=20260806-race-bank-1";
-    import { RaceAudio } from "./audio-engine.js?v=20260806-audio-stable-1";
+    import { RaceFirebase } from "./race-firebase.js?v=20260806-question-fix-7";
+
+    /* Audio fallback: permainan terus berjalan walaupun audio gagal dimuatkan. */
+    let RaceAudio = {
+      async setEnabled() { return true; },
+      async toggle() { return false; },
+      async startEngine() {},
+      setEngineSpeed() {},
+      playCountdown() {},
+      playGo() {},
+      playCorrect() {},
+      playWrong() {},
+      playVictory() {},
+      stopAll() {}
+    };
+
+    const audioEngineReady = import(
+      "./audio-engine.js?v=20260806-question-fix-7"
+    )
+      .then(module => {
+        if (module.RaceAudio) {
+          RaceAudio = module.RaceAudio;
+        }
+        return true;
+      })
+      .catch(error => {
+        console.warn(
+          "Audio Engine gagal dimuatkan. Permainan diteruskan tanpa audio:",
+          error
+        );
+        return false;
+      });
 
 
     const PROFILE_KEY =
@@ -1136,37 +1166,7 @@
         return true;
       })
       .catch(error => {
-        console.error(
-          "Bank soalan gagal dimuatkan:",
-          error
-        );
-
-        window.setTimeout(
-          function () {
-            const title =
-              document.getElementById(
-                "questionTitle"
-              );
-
-            const text =
-              document.getElementById(
-                "questionText"
-              );
-
-            if (title) {
-              title.textContent =
-                "BANK SOALAN GAGAL DIMUATKAN";
-            }
-
-            if (text) {
-              text.textContent =
-                error?.message ||
-                "Semak fail questions/question-bank.js.";
-            }
-          },
-          300
-        );
-
+        console.error("Bank soalan gagal dimuatkan:", error);
         return false;
       });
 
@@ -1192,6 +1192,7 @@
         playerProfile.audioEnabled !==
         false;
 
+      await audioEngineReady;
       await RaceAudio.setEnabled(audioEnabled);
       updateAudioButton();
 
@@ -1388,13 +1389,8 @@
                   "hidden"
                 );
 
-                /*
-                  Mulakan soalan pada peranti pelajar walaupun
-                  kemas kini Firebase mengambil masa atau gagal.
-                */
                 try {
-                  await RaceFirebase
-                    .activateRace();
+                  await RaceFirebase.activateRace();
                 } catch (error) {
                   console.warn(
                     "Status RUNNING gagal dikemas kini:",
@@ -1434,10 +1430,7 @@
 
 
     async function activateRace() {
-      /*
-        Elakkan fungsi dimulakan dua kali selepas bank soalan
-        sudah berjaya disediakan.
-      */
+      /* Elakkan mula dua kali selepas soalan sudah tersedia. */
       if (
         raceQuestions.length > 0 &&
         answeringLocked === false
@@ -1445,43 +1438,28 @@
         return;
       }
 
-      raceActivated =
-        true;
+      raceActivated = true;
+      answeringLocked = true;
 
-      answeringLocked =
-        true;
+      currentQuestionIndex = 0;
+      correctAnswers = 0;
+      wrongAnswers = 0;
+      score = 0;
+      speed = 80;
+      progress = 0;
 
       showMessage(
         "Sedang menyediakan bank soalan..."
       );
-
-      currentQuestionIndex =
-        0;
-
-      correctAnswers =
-        0;
-
-      wrongAnswers =
-        0;
-
-      score =
-        0;
-
-      speed =
-        80;
-
-      progress =
-        0;
 
       const bankLoaded =
         await questionBankReady;
 
       if (
         !bankLoaded ||
-        typeof prepareRaceQuestions !== "function"
+        typeof prepareRaceQuestions !==
+          "function"
       ) {
-        answeringLocked = true;
-
         document.getElementById(
           "questionTitle"
         ).textContent =
@@ -1492,6 +1470,10 @@
         ).textContent =
           "Pastikan fail questions/question-bank.js berada dalam folder questions di GitHub.";
 
+        document.getElementById(
+          "answerGrid"
+        ).innerHTML = "";
+
         showMessage(
           "Bank soalan tidak dapat dibaca. Muat semula selepas GitHub Pages selesai deploy."
         );
@@ -1499,24 +1481,68 @@
         return;
       }
 
-      raceQuestions = prepareRaceQuestions({
-        selectedKp: Array.isArray(raceControl.selectedKp) ? raceControl.selectedKp : [1],
-        questionTypes: Array.isArray(raceControl.questionTypes) ? raceControl.questionTypes : ["mcq"],
-        questionCount: Number(raceControl.questionCount || 10)
-      });
+      try {
+        raceQuestions =
+          prepareRaceQuestions({
+            selectedKp:
+              Array.isArray(
+                raceControl.selectedKp
+              )
+                ? raceControl.selectedKp
+                : [1],
 
-      effectiveQuestionCount = raceQuestions.length;
+            questionTypes:
+              Array.isArray(
+                raceControl.questionTypes
+              )
+                ? raceControl.questionTypes
+                : ["mcq"],
+
+            questionCount:
+              Number(
+                raceControl.questionCount ||
+                10
+              )
+          });
+      } catch (error) {
+        console.error(
+          "Penyediaan soalan gagal:",
+          error
+        );
+        raceQuestions = [];
+      }
+
+      effectiveQuestionCount =
+        raceQuestions.length;
+
+      if (effectiveQuestionCount === 0) {
+        document.getElementById(
+          "questionTitle"
+        ).textContent =
+          "TIADA SOALAN TERSEDIA";
+
+        document.getElementById(
+          "questionText"
+        ).textContent =
+          "Pilihan KP atau jenis soalan guru tidak mempunyai soalan yang sepadan.";
+
+        document.getElementById(
+          "answerGrid"
+        ).innerHTML = "";
+
+        showMessage(
+          "Guru perlu pilih KP dan jenis soalan yang tersedia."
+        );
+
+        return;
+      }
+
+      answeringLocked = false;
 
       document.getElementById(
         "questionCounter"
       ).textContent =
         `SOALAN 1 / ${effectiveQuestionCount}`;
-
-      if (effectiveQuestionCount === 0) {
-        answeringLocked = true;
-        showMessage("Tiada soalan unik tersedia untuk pilihan guru.");
-        return;
-      }
 
       showQuestion();
 
