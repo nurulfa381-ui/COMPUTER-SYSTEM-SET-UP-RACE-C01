@@ -1069,36 +1069,53 @@
 
   <script type="module">
 
-    import { RaceFirebase } from "./race-firebase.js?v=20260806-question-fix-7";
+    import {
+      RaceFirebase
+    } from "./race-firebase.js?v=20260806-firebase-audio-safe-1";
 
-    /* Audio fallback: permainan terus berjalan walaupun audio gagal dimuatkan. */
+    /* =========================================================
+       AUDIO FALLBACK SELAMAT
+       Firebase dan soalan tetap berfungsi walaupun audio gagal.
+    ========================================================= */
+
     let RaceAudio = {
       async setEnabled() { return true; },
       async toggle() { return false; },
       async startEngine() {},
+      async startIdle() {},
       setEngineSpeed() {},
       playCountdown() {},
+      playCountdownVoice() {},
       playGo() {},
       playCorrect() {},
       playWrong() {},
+      playTurbo() {},
+      playBrake() {},
+      playClick() {},
+      playSelectCar() {},
+      playNotification() {},
+      playFinish() {},
       playVictory() {},
+      stopEngine() {},
       stopAll() {}
     };
 
     const audioEngineReady = import(
-      "./audio-engine.js?v=20260806-question-fix-7"
+      "./audio-engine.js?v=20260806-firebase-audio-safe-1"
     )
       .then(module => {
         if (module.RaceAudio) {
           RaceAudio = module.RaceAudio;
         }
+
         return true;
       })
       .catch(error => {
         console.warn(
-          "Audio Engine gagal dimuatkan. Permainan diteruskan tanpa audio:",
+          "Audio gagal dimuatkan. Permainan diteruskan tanpa audio:",
           error
         );
+
         return false;
       });
 
@@ -1193,7 +1210,18 @@
         false;
 
       await audioEngineReady;
-      await RaceAudio.setEnabled(audioEnabled);
+
+      try {
+        await RaceAudio.setEnabled(
+          audioEnabled
+        );
+      } catch (error) {
+        console.warn(
+          "Audio tidak dapat dimulakan:",
+          error
+        );
+      }
+
       updateAudioButton();
 
       try {
@@ -1314,10 +1342,7 @@
 
       if (
         status === "RUNNING" &&
-        (
-          !raceActivated ||
-          raceQuestions.length === 0
-        )
+        !raceActivated
       ) {
         activateRace();
       }
@@ -1389,16 +1414,10 @@
                   "hidden"
                 );
 
-                try {
-                  await RaceFirebase.activateRace();
-                } catch (error) {
-                  console.warn(
-                    "Status RUNNING gagal dikemas kini:",
-                    error
-                  );
-                } finally {
-                  await activateRace();
-                }
+                await RaceFirebase
+                  .activateRace();
+
+                activateRace();
               },
               650
             );
@@ -1430,36 +1449,39 @@
 
 
     async function activateRace() {
-      /* Elakkan mula dua kali selepas soalan sudah tersedia. */
-      if (
-        raceQuestions.length > 0 &&
-        answeringLocked === false
-      ) {
-        return;
-      }
+      raceActivated =
+        true;
 
-      raceActivated = true;
-      answeringLocked = true;
+      answeringLocked =
+        false;
 
-      currentQuestionIndex = 0;
-      correctAnswers = 0;
-      wrongAnswers = 0;
-      score = 0;
-      speed = 80;
-      progress = 0;
+      currentQuestionIndex =
+        0;
 
-      showMessage(
-        "Sedang menyediakan bank soalan..."
-      );
+      correctAnswers =
+        0;
+
+      wrongAnswers =
+        0;
+
+      score =
+        0;
+
+      speed =
+        80;
+
+      progress =
+        0;
 
       const bankLoaded =
         await questionBankReady;
 
       if (
         !bankLoaded ||
-        typeof prepareRaceQuestions !==
-          "function"
+        typeof prepareRaceQuestions !== "function"
       ) {
+        answeringLocked = true;
+
         document.getElementById(
           "questionTitle"
         ).textContent =
@@ -1470,10 +1492,6 @@
         ).textContent =
           "Pastikan fail questions/question-bank.js berada dalam folder questions di GitHub.";
 
-        document.getElementById(
-          "answerGrid"
-        ).innerHTML = "";
-
         showMessage(
           "Bank soalan tidak dapat dibaca. Muat semula selepas GitHub Pages selesai deploy."
         );
@@ -1481,68 +1499,19 @@
         return;
       }
 
-      try {
-        raceQuestions =
-          prepareRaceQuestions({
-            selectedKp:
-              Array.isArray(
-                raceControl.selectedKp
-              )
-                ? raceControl.selectedKp
-                : [1],
+      raceQuestions = prepareRaceQuestions({
+        selectedKp: Array.isArray(raceControl.selectedKp) ? raceControl.selectedKp : [1],
+        questionTypes: Array.isArray(raceControl.questionTypes) ? raceControl.questionTypes : ["mcq"],
+        questionCount: Number(raceControl.questionCount || 10)
+      });
 
-            questionTypes:
-              Array.isArray(
-                raceControl.questionTypes
-              )
-                ? raceControl.questionTypes
-                : ["mcq"],
-
-            questionCount:
-              Number(
-                raceControl.questionCount ||
-                10
-              )
-          });
-      } catch (error) {
-        console.error(
-          "Penyediaan soalan gagal:",
-          error
-        );
-        raceQuestions = [];
-      }
-
-      effectiveQuestionCount =
-        raceQuestions.length;
+      effectiveQuestionCount = raceQuestions.length;
 
       if (effectiveQuestionCount === 0) {
-        document.getElementById(
-          "questionTitle"
-        ).textContent =
-          "TIADA SOALAN TERSEDIA";
-
-        document.getElementById(
-          "questionText"
-        ).textContent =
-          "Pilihan KP atau jenis soalan guru tidak mempunyai soalan yang sepadan.";
-
-        document.getElementById(
-          "answerGrid"
-        ).innerHTML = "";
-
-        showMessage(
-          "Guru perlu pilih KP dan jenis soalan yang tersedia."
-        );
-
+        answeringLocked = true;
+        showMessage("Tiada soalan unik tersedia untuk pilihan guru.");
         return;
       }
-
-      answeringLocked = false;
-
-      document.getElementById(
-        "questionCounter"
-      ).textContent =
-        `SOALAN 1 / ${effectiveQuestionCount}`;
 
       showQuestion();
 
@@ -2151,7 +2120,8 @@
         </strong>
 
         ${escapeHtml(
-          explanation
+          explanation ||
+          "Sila semak semula nota berkaitan."
         )}
       `;
     }
