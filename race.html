@@ -1136,7 +1136,37 @@
         return true;
       })
       .catch(error => {
-        console.error("Bank soalan gagal dimuatkan:", error);
+        console.error(
+          "Bank soalan gagal dimuatkan:",
+          error
+        );
+
+        window.setTimeout(
+          function () {
+            const title =
+              document.getElementById(
+                "questionTitle"
+              );
+
+            const text =
+              document.getElementById(
+                "questionText"
+              );
+
+            if (title) {
+              title.textContent =
+                "BANK SOALAN GAGAL DIMUATKAN";
+            }
+
+            if (text) {
+              text.textContent =
+                error?.message ||
+                "Semak fail questions/question-bank.js.";
+            }
+          },
+          300
+        );
+
         return false;
       });
 
@@ -1283,7 +1313,10 @@
 
       if (
         status === "RUNNING" &&
-        !raceActivated
+        (
+          !raceActivated ||
+          raceQuestions.length === 0
+        )
       ) {
         activateRace();
       }
@@ -1355,10 +1388,21 @@
                   "hidden"
                 );
 
-                await RaceFirebase
-                  .activateRace();
-
-                activateRace();
+                /*
+                  Mulakan soalan pada peranti pelajar walaupun
+                  kemas kini Firebase mengambil masa atau gagal.
+                */
+                try {
+                  await RaceFirebase
+                    .activateRace();
+                } catch (error) {
+                  console.warn(
+                    "Status RUNNING gagal dikemas kini:",
+                    error
+                  );
+                } finally {
+                  await activateRace();
+                }
               },
               650
             );
@@ -1390,11 +1434,26 @@
 
 
     async function activateRace() {
+      /*
+        Elakkan fungsi dimulakan dua kali selepas bank soalan
+        sudah berjaya disediakan.
+      */
+      if (
+        raceQuestions.length > 0 &&
+        answeringLocked === false
+      ) {
+        return;
+      }
+
       raceActivated =
         true;
 
       answeringLocked =
-        false;
+        true;
+
+      showMessage(
+        "Sedang menyediakan bank soalan..."
+      );
 
       currentQuestionIndex =
         0;
@@ -1447,6 +1506,11 @@
       });
 
       effectiveQuestionCount = raceQuestions.length;
+
+      document.getElementById(
+        "questionCounter"
+      ).textContent =
+        `SOALAN 1 / ${effectiveQuestionCount}`;
 
       if (effectiveQuestionCount === 0) {
         answeringLocked = true;
