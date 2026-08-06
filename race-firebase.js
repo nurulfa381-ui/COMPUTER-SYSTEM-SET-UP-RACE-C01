@@ -9,7 +9,7 @@ import {
   off,
   serverTimestamp,
   ensureFirebaseLogin
-} from "./firebase-config.js?v=20260805-race-firebase-1";
+} from "./firebase-config.js?v=20260806-race-firebase-final-1";
 
 
 const ROOM_ID =
@@ -42,6 +42,9 @@ let localPlayerUid =
 let activeListeners =
   [];
 
+let activationTimer =
+  null;
+
 
 /* =========================================================
    MULAKAN FIREBASE
@@ -59,6 +62,25 @@ async function initialiseRaceFirebase() {
     localPlayerUid,
     roomId:
       ROOM_ID
+  };
+}
+
+
+/* =========================================================
+   PASTIKAN FIREBASE SUDAH BERSEDIA
+========================================================= */
+
+async function ensureInitialised() {
+  if (
+    !firebaseUser ||
+    !localPlayerUid
+  ) {
+    await initialiseRaceFirebase();
+  }
+
+  return {
+    firebaseUser,
+    localPlayerUid
   };
 }
 
@@ -103,6 +125,7 @@ function getLocalProfile() {
         PROFILE_KEY
       ) || "null"
     );
+
   } catch (error) {
     console.error(
       "Profil tempatan gagal dibaca:",
@@ -123,13 +146,16 @@ function saveLocalProfile(
   const profile = {
     ...current,
     ...updates,
+
     updatedAt:
       new Date().toISOString()
   };
 
   localStorage.setItem(
     PROFILE_KEY,
-    JSON.stringify(profile)
+    JSON.stringify(
+      profile
+    )
   );
 
   return profile;
@@ -141,7 +167,7 @@ function saveLocalProfile(
 ========================================================= */
 
 async function joinLobby() {
-  await initialiseRaceFirebase();
+  await ensureInitialised();
 
   const profile =
     getLocalProfile();
@@ -189,6 +215,16 @@ async function joinLobby() {
       "Lobby telah penuh. Maksimum 5 pemain."
     );
   }
+
+  /*
+    Jika pemain masuk semula, jangan batalkan
+    kelulusan sedia ada secara tidak sengaja.
+  */
+
+  const existingPlayer =
+    currentPlayers[
+      localPlayerUid
+    ] || {};
 
   const playerData = {
     uid:
@@ -243,36 +279,53 @@ async function joinLobby() {
       profile.audioEnabled !== false,
 
     approved:
-      false,
+      existingPlayer.approved === true,
 
     ready:
-      false,
+      existingPlayer.ready === true,
 
     rejected:
       false,
 
     score:
-      0,
+      Number(
+        existingPlayer.score || 0
+      ),
 
     progress:
-      0,
+      Number(
+        existingPlayer.progress || 0
+      ),
 
     correctAnswers:
-      0,
+      Number(
+        existingPlayer.correctAnswers ||
+        0
+      ),
 
     wrongAnswers:
-      0,
+      Number(
+        existingPlayer.wrongAnswers ||
+        0
+      ),
 
     currentQuestion:
-      0,
+      Number(
+        existingPlayer.currentQuestion ||
+        0
+      ),
 
     speed:
-      0,
+      Number(
+        existingPlayer.speed || 0
+      ),
 
     raceStatus:
+      existingPlayer.raceStatus ||
       "WAITING",
 
     joinedAt:
+      existingPlayer.joinedAt ||
       serverTimestamp(),
 
     updatedAt:
@@ -289,16 +342,16 @@ async function joinLobby() {
 
   saveLocalProfile({
     approved:
-      false,
+      playerData.approved,
 
     ready:
-      false,
+      playerData.ready,
 
     rejected:
       false,
 
     raceStatus:
-      "WAITING"
+      playerData.raceStatus
   });
 
   return playerData;
@@ -330,7 +383,9 @@ function listenToPlayers(
             : {};
 
         const players =
-          Object.values(value)
+          Object.values(
+            value
+          )
             .sort(
               (
                 first,
@@ -377,6 +432,7 @@ function listenToPlayers(
   activeListeners.push({
     ref:
       playersRef,
+
     listener
   });
 
@@ -461,6 +517,18 @@ function listenToOwnPlayer(
             Number(
               player.currentQuestion ||
               0
+            ),
+
+          correctAnswers:
+            Number(
+              player.correctAnswers ||
+              0
+            ),
+
+          wrongAnswers:
+            Number(
+              player.wrongAnswers ||
+              0
             )
         });
 
@@ -484,6 +552,7 @@ function listenToOwnPlayer(
   activeListeners.push({
     ref:
       playerRef,
+
     listener
   });
 
@@ -504,7 +573,7 @@ function listenToOwnPlayer(
 async function setReadyStatus(
   ready
 ) {
-  await initialiseRaceFirebase();
+  await ensureInitialised();
 
   await update(
     ref(
@@ -513,7 +582,9 @@ async function setReadyStatus(
     ),
     {
       ready:
-        Boolean(ready),
+        Boolean(
+          ready
+        ),
 
       updatedAt:
         serverTimestamp()
@@ -522,7 +593,9 @@ async function setReadyStatus(
 
   saveLocalProfile({
     ready:
-      Boolean(ready)
+      Boolean(
+        ready
+      )
   });
 }
 
@@ -535,6 +608,8 @@ async function approvePlayer(
   playerUid,
   approved
 ) {
+  await ensureInitialised();
+
   await update(
     ref(
       database,
@@ -542,15 +617,18 @@ async function approvePlayer(
     ),
     {
       approved:
-        Boolean(approved),
+        Boolean(
+          approved
+        ),
 
       rejected:
         false,
 
       ready:
-        approved
-          ? false
-          : false,
+        false,
+
+      raceStatus:
+        "WAITING",
 
       updatedAt:
         serverTimestamp()
@@ -566,6 +644,8 @@ async function approvePlayer(
 async function rejectPlayer(
   playerUid
 ) {
+  await ensureInitialised();
+
   await update(
     ref(
       database,
@@ -598,6 +678,7 @@ async function rejectPlayer(
             `${PLAYERS_PATH}/${playerUid}`
           )
         );
+
       } catch (error) {
         console.warn(
           "Rekod pemain gagal dipadam:",
@@ -605,7 +686,7 @@ async function rejectPlayer(
         );
       }
     },
-    1200
+    1500
   );
 }
 
@@ -615,7 +696,7 @@ async function rejectPlayer(
 ========================================================= */
 
 async function leaveLobby() {
-  await initialiseRaceFirebase();
+  await ensureInitialised();
 
   await remove(
     ref(
@@ -641,12 +722,14 @@ async function leaveLobby() {
 
 
 /* =========================================================
-   KAWALAN PERLUMBAAN
+   SIMPAN KAWALAN PERLUMBAAN
 ========================================================= */
 
 async function saveRaceControl(
   controlData
 ) {
+  await ensureInitialised();
+
   await update(
     ref(
       database,
@@ -661,6 +744,10 @@ async function saveRaceControl(
   );
 }
 
+
+/* =========================================================
+   DENGAR KAWALAN PERLUMBAAN
+========================================================= */
 
 function listenToRaceControl(
   callback,
@@ -677,13 +764,16 @@ function listenToRaceControl(
       controlRef,
 
       snapshot => {
-        callback(
+        const control =
           snapshot.exists()
             ? snapshot.val()
             : {
                 status:
                   "WAITING"
-              }
+              };
+
+        callback(
+          control
         );
       },
 
@@ -702,6 +792,7 @@ function listenToRaceControl(
   activeListeners.push({
     ref:
       controlRef,
+
     listener
   });
 
@@ -720,8 +811,12 @@ function listenToRaceControl(
 ========================================================= */
 
 async function startRace(
-  configuration
+  configuration = {}
 ) {
+  await ensureInitialised();
+
+  clearActivationTimer();
+
   const playersSnapshot =
     await get(
       ref(
@@ -740,21 +835,58 @@ async function startRace(
   const approvedPlayers =
     players.filter(
       player =>
-        player.approved ===
-        true
+        player.approved === true
     );
 
   if (
-    approvedPlayers.length ===
-    0
+    approvedPlayers.length === 0
   ) {
     throw new Error(
       "Tiada pemain yang diluluskan."
     );
   }
 
+  const selectedKp =
+    Array.isArray(
+      configuration.selectedKp
+    ) &&
+    configuration.selectedKp.length
+      ? configuration.selectedKp.map(
+          Number
+        )
+      : [1];
+
+  const questionTypes =
+    Array.isArray(
+      configuration.questionTypes
+    ) &&
+    configuration.questionTypes.length
+      ? configuration.questionTypes
+      : ["mcq"];
+
+  const questionCount =
+    Math.max(
+      1,
+      Number(
+        configuration.questionCount ||
+        10
+      )
+    );
+
+  /*
+    Countdown selama 4 saat.
+  */
+
+  const countdownDuration =
+    4000;
+
   const raceStartTime =
-    Date.now() + 4000;
+    Date.now() +
+    countdownDuration;
+
+  /*
+    Simpan arahan perlumbaan terlebih dahulu.
+  */
 
   await set(
     ref(
@@ -768,23 +900,18 @@ async function startRace(
       startTime:
         raceStartTime,
 
-      selectedKp:
-        configuration.selectedKp ||
-        [1],
+      selectedKp,
 
-      questionTypes:
-        configuration.questionTypes ||
-        ["mcq"],
+      questionTypes,
 
-      questionCount:
-        Number(
-          configuration.questionCount ||
-          10
-        ),
+      questionCount,
 
       startedBy:
         configuration.startedBy ||
         "Guru",
+
+      raceId:
+        `race_${Date.now()}`,
 
       createdAt:
         serverTimestamp(),
@@ -794,7 +921,11 @@ async function startRace(
     }
   );
 
-  const updatePromises =
+  /*
+    Reset semua pemain yang diluluskan.
+  */
+
+  await Promise.all(
     approvedPlayers.map(
       player =>
         update(
@@ -824,22 +955,57 @@ async function startRace(
             speed:
               0,
 
+            finishTime:
+              null,
+
             updatedAt:
               serverTimestamp()
           }
         )
+    )
+  );
+
+  /*
+    PENTING:
+    Selepas countdown tamat, status ditukar
+    kepada RUNNING secara automatik.
+  */
+
+  const delay =
+    Math.max(
+      0,
+      raceStartTime -
+      Date.now()
     );
 
-  await Promise.all(
-    updatePromises
-  );
+  activationTimer =
+    window.setTimeout(
+      async () => {
+        try {
+          await activateRace();
+
+        } catch (error) {
+          console.error(
+            "Perlumbaan gagal diaktifkan selepas countdown:",
+            error
+          );
+        }
+      },
+      delay
+    );
 
   return {
     startTime:
       raceStartTime,
 
     playerCount:
-      approvedPlayers.length
+      approvedPlayers.length,
+
+    selectedKp,
+
+    questionTypes,
+
+    questionCount
   };
 }
 
@@ -849,6 +1015,45 @@ async function startRace(
 ========================================================= */
 
 async function activateRace() {
+  await ensureInitialised();
+
+  clearActivationTimer();
+
+  /*
+    Semak status semasa supaya tidak mengaktifkan
+    perlumbaan yang telah dihentikan atau direset.
+  */
+
+  const controlSnapshot =
+    await get(
+      ref(
+        database,
+        CONTROL_PATH
+      )
+    );
+
+  const currentControl =
+    controlSnapshot.exists()
+      ? controlSnapshot.val()
+      : {};
+
+  if (
+    [
+      "STOPPED",
+      "WAITING",
+      "FINISHED"
+    ].includes(
+      currentControl.status
+    )
+  ) {
+    console.warn(
+      "Activate race dibatalkan kerana status semasa:",
+      currentControl.status
+    );
+
+    return false;
+  }
+
   const playersSnapshot =
     await get(
       ref(
@@ -867,9 +1072,20 @@ async function activateRace() {
   const approvedPlayers =
     players.filter(
       player =>
-        player.approved ===
-        true
+        player.approved === true
     );
+
+  if (
+    approvedPlayers.length === 0
+  ) {
+    throw new Error(
+      "Tiada pemain diluluskan untuk memulakan perlumbaan."
+    );
+  }
+
+  /*
+    Tukar kawalan global kepada RUNNING.
+  */
 
   await update(
     ref(
@@ -887,6 +1103,10 @@ async function activateRace() {
         serverTimestamp()
     }
   );
+
+  /*
+    Tukar setiap pemain kepada RACING.
+  */
 
   await Promise.all(
     approvedPlayers.map(
@@ -909,6 +1129,8 @@ async function activateRace() {
         )
     )
   );
+
+  return true;
 }
 
 
@@ -917,6 +1139,10 @@ async function activateRace() {
 ========================================================= */
 
 async function stopRace() {
+  await ensureInitialised();
+
+  clearActivationTimer();
+
   await update(
     ref(
       database,
@@ -982,6 +1208,10 @@ async function stopRace() {
 ========================================================= */
 
 async function resetRace() {
+  await ensureInitialised();
+
+  clearActivationTimer();
+
   await set(
     ref(
       database,
@@ -999,6 +1229,12 @@ async function resetRace() {
 
       questionCount:
         10,
+
+      startTime:
+        null,
+
+      actualStartTime:
+        null,
 
       updatedAt:
         serverTimestamp()
@@ -1054,6 +1290,9 @@ async function resetRace() {
             speed:
               0,
 
+            finishTime:
+              null,
+
             raceStatus:
               "WAITING",
 
@@ -1073,7 +1312,7 @@ async function resetRace() {
 async function updatePlayerPerformance(
   data
 ) {
-  await initialiseRaceFirebase();
+  await ensureInitialised();
 
   await update(
     ref(
@@ -1095,6 +1334,52 @@ async function updatePlayerPerformance(
 
 
 /* =========================================================
+   TAMATKAN PERLUMBAAN GLOBAL
+========================================================= */
+
+async function finishRace() {
+  await ensureInitialised();
+
+  clearActivationTimer();
+
+  await update(
+    ref(
+      database,
+      CONTROL_PATH
+    ),
+    {
+      status:
+        "FINISHED",
+
+      finishedAt:
+        serverTimestamp(),
+
+      updatedAt:
+        serverTimestamp()
+    }
+  );
+}
+
+
+/* =========================================================
+   BERSIHKAN TIMER
+========================================================= */
+
+function clearActivationTimer() {
+  if (
+    activationTimer
+  ) {
+    window.clearTimeout(
+      activationTimer
+    );
+
+    activationTimer =
+      null;
+  }
+}
+
+
+/* =========================================================
    BERSIHKAN LISTENER
 ========================================================= */
 
@@ -1105,8 +1390,10 @@ function stopAllListeners() {
         off(
           item.ref
         );
+
       } catch (error) {
         console.warn(
+          "Listener gagal dihentikan:",
           error
         );
       }
@@ -1146,6 +1433,7 @@ const RaceFirebase = {
   activateRace,
   stopRace,
   resetRace,
+  finishRace,
 
   updatePlayerPerformance,
 
