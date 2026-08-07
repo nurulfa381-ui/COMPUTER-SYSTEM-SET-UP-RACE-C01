@@ -197,10 +197,45 @@ async function joinLobby() {
       )
     );
 
-  const currentPlayers =
+  let currentPlayers =
     playersSnapshot.exists()
       ? playersSnapshot.val()
       : {};
+
+  /*
+    Bersihkan rekod lama daripada auth pengguna/peranti yang sama
+    sebelum semak kapasiti lobby.
+  */
+  const staleOwnIds =
+    Object.entries(
+      currentPlayers
+    )
+      .filter(
+        ([uid, player]) =>
+          uid !== localPlayerUid &&
+          player?.authUid === firebaseUser?.uid
+      )
+      .map(([uid]) => uid);
+
+  if (staleOwnIds.length) {
+    await Promise.allSettled(
+      staleOwnIds.map(
+        uid =>
+          remove(
+            ref(
+              database,
+              `${PLAYERS_PATH}/${uid}`
+            )
+          )
+      )
+    );
+
+    staleOwnIds.forEach(
+      uid => {
+        delete currentPlayers[uid];
+      }
+    );
+  }
 
   const activePlayerIds =
     Object.keys(
@@ -706,12 +741,85 @@ async function rejectPlayer(
 async function leaveLobby() {
   await ensureInitialised();
 
-  await remove(
-    ref(
-      database,
-      `${PLAYERS_PATH}/${localPlayerUid}`
-    )
+  const savedUid =
+    localStorage.getItem(
+      PLAYER_UID_KEY
+    );
+
+  const candidateIds =
+    [
+      localPlayerUid,
+      savedUid,
+      firebaseUser?.uid
+    ]
+      .filter(Boolean);
+
+  /*
+    Buang rekod terus berdasarkan UID yang diketahui.
+  */
+  await Promise.allSettled(
+    [...new Set(candidateIds)]
+      .map(
+        uid =>
+          remove(
+            ref(
+              database,
+              `${PLAYERS_PATH}/${uid}`
+            )
+          )
+      )
   );
+
+  /*
+    Safety cleanup:
+    Jika pernah tercipta rekod lama menggunakan UID berbeza
+    tetapi authUid sama pada peranti ini, buang rekod itu juga.
+  */
+  try {
+    const snapshot =
+      await get(
+        ref(
+          database,
+          PLAYERS_PATH
+        )
+      );
+
+    if (snapshot.exists()) {
+      const value =
+        snapshot.val() || {};
+
+      const staleIds =
+        Object.entries(value)
+          .filter(
+            ([uid, player]) =>
+              uid !== localPlayerUid &&
+              player &&
+              (
+                player.authUid === firebaseUser?.uid ||
+                candidateIds.includes(player.uid)
+              )
+          )
+          .map(([uid]) => uid);
+
+      await Promise.allSettled(
+        staleIds.map(
+          uid =>
+            remove(
+              ref(
+                database,
+                `${PLAYERS_PATH}/${uid}`
+              )
+            )
+        )
+      );
+    }
+
+  } catch (error) {
+    console.warn(
+      "Pembersihan rekod lama pemain gagal:",
+      error
+    );
+  }
 
   saveLocalProfile({
     approved:
@@ -726,6 +834,8 @@ async function leaveLobby() {
     raceStatus:
       "LEFT"
   });
+
+  return true;
 }
 
 
