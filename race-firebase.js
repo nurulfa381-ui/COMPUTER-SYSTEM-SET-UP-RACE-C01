@@ -45,6 +45,12 @@ let activeListeners =
 let activationTimer =
   null;
 
+let serverTimeOffset =
+  0;
+
+let serverOffsetListenerStarted =
+  false;
+
 
 /* =========================================================
    MULAKAN FIREBASE
@@ -56,6 +62,8 @@ async function initialiseRaceFirebase() {
 
   localPlayerUid =
     getOrCreatePlayerUid();
+
+  startServerClockSync();
 
   return {
     firebaseUser,
@@ -807,6 +815,40 @@ function listenToRaceControl(
 
 
 /* =========================================================
+   MASA FIREBASE SERVER
+========================================================= */
+
+function startServerClockSync() {
+  if (serverOffsetListenerStarted) return;
+
+  serverOffsetListenerStarted = true;
+
+  const offsetRef =
+    ref(database, ".info/serverTimeOffset");
+
+  onValue(
+    offsetRef,
+    snapshot => {
+      serverTimeOffset =
+        Number(snapshot.val() || 0);
+    },
+    error => {
+      console.warn(
+        "Offset masa Firebase gagal dibaca:",
+        error
+      );
+      serverTimeOffset = 0;
+    }
+  );
+}
+
+function getServerNow() {
+  return Date.now() +
+    Number(serverTimeOffset || 0);
+}
+
+
+/* =========================================================
    MULAKAN PERLUMBAAN
 ========================================================= */
 
@@ -874,14 +916,15 @@ async function startRace(
     );
 
   /*
-    Countdown selama 4 saat.
+    Countdown 5 saat supaya semua peranti sempat
+    menerima arahan Firebase sebelum 3-2-1.
   */
 
   const countdownDuration =
-    4000;
+    5000;
 
   const raceStartTime =
-    Date.now() +
+    getServerNow() +
     countdownDuration;
 
   /*
@@ -975,7 +1018,7 @@ async function startRace(
     Math.max(
       0,
       raceStartTime -
-      Date.now()
+      getServerNow()
     );
 
   activationTimer =
@@ -1429,6 +1472,7 @@ const RaceFirebase = {
   rejectPlayer,
 
   saveRaceControl,
+  getServerNow,
   startRace,
   activateRace,
   stopRace,
