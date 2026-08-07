@@ -396,6 +396,39 @@
         transform 0.3s ease;
     }
 
+    .track-car-body {
+      position: relative;
+      width: 88px;
+      height: 42px;
+      border: 3px solid #fff;
+      border-radius: 28px 34px 18px 18px;
+      background: var(--car-color, #ef4444);
+      box-shadow: inset 0 -8px 0 rgba(0,0,0,.18), 0 10px 18px rgba(0,0,0,.45);
+    }
+
+    .track-car-body::before {
+      content: "";
+      position: absolute;
+      left: 28px;
+      top: -15px;
+      width: 36px;
+      height: 20px;
+      border: 3px solid #fff;
+      border-bottom: 0;
+      border-radius: 16px 18px 4px 4px;
+      background: #0f172a;
+    }
+
+    .track-car-number {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,.7);
+    }
+
     .track-car-icon {
       font-size: 4.7rem;
 
@@ -693,51 +726,6 @@
       text-align: center;
     }
 
-
-    .audio-unlock-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 10050;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: rgba(2, 7, 18, 0.97);
-      backdrop-filter: blur(12px);
-    }
-
-    .audio-unlock-box {
-      width: min(560px, 100%);
-      padding: 28px;
-      border: 2px solid var(--race-border);
-      border-radius: 24px;
-      background: linear-gradient(145deg, var(--race-panel-light), var(--race-panel));
-      text-align: center;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
-    }
-
-    .audio-unlock-box h2 {
-      margin: 0 0 12px;
-      font-size: clamp(1.8rem, 5vw, 3rem);
-    }
-
-    .audio-unlock-box p {
-      color: var(--race-muted);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .audio-unlock-button {
-      width: 100%;
-      min-height: 64px;
-      border: 2px solid var(--race-green);
-      border-radius: 16px;
-      background: #047857;
-      color: #fff;
-      font-size: 1.1rem;
-      font-weight: 900;
-      cursor: pointer;
-    }
-
     .countdown-overlay {
       position: fixed;
       inset: 0;
@@ -890,22 +878,7 @@
   </style>
 </head>
 
-
 <body>
-
-  <div id="audioUnlockOverlay" class="audio-unlock-overlay">
-    <div class="audio-unlock-box">
-      <h2>🔊 AKTIFKAN AUDIO</h2>
-      <p>
-        Tekan butang di bawah sekali untuk membenarkan bunyi enjin,
-        countdown dan effect perlumbaan pada peranti ini.
-      </p>
-      <button id="audioUnlockButton" class="audio-unlock-button" type="button">
-        🔊 AKTIFKAN AUDIO & MASUK RACE
-      </button>
-    </div>
-  </div>
-
 
   <main class="race-page">
 
@@ -1271,58 +1244,18 @@
 
       await audioEngineReady;
 
-      updateAudioButton();
-
-      const audioUnlockButton =
-        document.getElementById("audioUnlockButton");
-
-      const audioUnlockOverlay =
-        document.getElementById("audioUnlockOverlay");
-
-      if (audioUnlockButton) {
-        audioUnlockButton.addEventListener(
-          "click",
-          async () => {
-            try {
-              await RaceAudio.setEnabled(true);
-
-              if (typeof RaceAudio.unlock === "function") {
-                await RaceAudio.unlock();
-              }
-
-              RaceAudio.playClick?.();
-
-              audioEnabled = true;
-              playerProfile.audioEnabled = true;
-
-              localStorage.setItem(
-                PROFILE_KEY,
-                JSON.stringify(playerProfile)
-              );
-
-              updateAudioButton();
-
-              if (audioUnlockOverlay) {
-                audioUnlockOverlay.classList.add("hidden");
-              }
-
-              showMessage(
-                "Audio aktif. Menunggu arahan guru..."
-              );
-
-            } catch (error) {
-              console.error(
-                "Audio gagal diaktifkan:",
-                error
-              );
-
-              window.alert(
-                "Audio masih disekat oleh browser. Tekan AUDIO ON sekali lagi selepas masuk race."
-              );
-            }
-          }
+      try {
+        await RaceAudio.setEnabled(
+          audioEnabled
+        );
+      } catch (error) {
+        console.warn(
+          "Audio tidak dapat dimulakan:",
+          error
         );
       }
+
+      updateAudioButton();
 
       try {
         await RaceFirebase
@@ -1996,6 +1929,36 @@
     }
 
 
+
+    function normaliseCarColour(value, fallbackIndex = 0) {
+      const palette = {
+        red:"#ef4444", merah:"#ef4444",
+        blue:"#3b82f6", biru:"#3b82f6",
+        green:"#22c55e", hijau:"#22c55e",
+        yellow:"#eab308", kuning:"#eab308",
+        orange:"#f97316", oren:"#f97316",
+        purple:"#a855f7", ungu:"#a855f7",
+        pink:"#ec4899", black:"#111827",
+        white:"#f8fafc", cyan:"#06b6d4"
+      };
+
+      const fallback = [
+        "#ef4444",
+        "#3b82f6",
+        "#22c55e",
+        "#eab308",
+        "#a855f7"
+      ];
+
+      const key = String(value || "").trim().toLowerCase();
+
+      if (/^#[0-9a-f]{6}$/i.test(key)) {
+        return key;
+      }
+
+      return palette[key] || fallback[fallbackIndex % fallback.length];
+    }
+
     function renderTrackCars() {
       const track =
         document.getElementById(
@@ -2115,14 +2078,28 @@
             car.style.transform =
               "translate(-50%, -50%)";
 
+            const selectedCarColour =
+              normaliseCarColour(
+                player.carColour ||
+                player.carColor,
+                index
+              );
+
+            car.style.setProperty(
+              "--car-color",
+              selectedCarColour
+            );
+
             car.innerHTML = `
               <span class="speed-effect"></span>
 
-              <span class="track-car-icon">
-                ${escapeHtml(
-                  player.carIcon ||
-                  "🏎️"
-                )}
+              <span class="track-car-body">
+                <span class="track-car-number">
+                  ${escapeHtml(
+                    player.carNumber ||
+                    String(index + 1).padStart(2, "0")
+                  )}
+                </span>
               </span>
 
               <span class="track-car-name">
@@ -2284,8 +2261,8 @@
         raceActivated
       ) {
         await RaceAudio.startEngine({
-          rpm: 92,
-          volume: 0.22
+          rpm: 78,
+          volume: 0.075
         });
 
         RaceAudio.setEngineSpeed(
@@ -2310,29 +2287,12 @@
     }
 
 
-    async function playStartSound() {
-      try {
-        if (typeof RaceAudio.unlock === "function") {
-          await RaceAudio.unlock();
-        }
-
-        await RaceAudio.playGo();
-
-        await RaceAudio.startEngine({
-          rpm: 92,
-          volume: 0.22
-        });
-
-        RaceAudio.setEngineSpeed(
-          Math.max(speed, 120)
-        );
-
-      } catch (error) {
-        console.warn(
-          "Bunyi mula perlumbaan gagal:",
-          error
-        );
-      }
+    function playStartSound() {
+      RaceAudio.playGo();
+      RaceAudio.startEngine({
+        rpm: 78,
+        volume: 0.075
+      });
     }
 
 
