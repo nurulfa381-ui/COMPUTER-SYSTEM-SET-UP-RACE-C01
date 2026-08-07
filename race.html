@@ -1410,7 +1410,8 @@
     function runSynchronizedCountdown(
       startTime
     ) {
-      raceActivated = true;
+      raceActivated =
+        true;
 
       const overlay =
         document.getElementById(
@@ -1426,75 +1427,61 @@
         "hidden"
       );
 
-      let lastShown = null;
+      const updateCountdown =
+        async () => {
+          const remaining =
+            Number(startTime || 0) -
+            Date.now();
 
-      const tick = () => {
-        const now =
-          typeof RaceFirebase.getServerNow === "function"
-            ? RaceFirebase.getServerNow()
-            : Date.now();
+          if (
+            remaining <= 0
+          ) {
+            text.textContent =
+              "GO!";
 
-        const remaining =
-          Number(startTime || 0) -
-          now;
+            playStartSound();
 
-        if (remaining <= 0) {
-          text.textContent = "GO!";
+            window.setTimeout(
+              async () => {
+                overlay.classList.add(
+                  "hidden"
+                );
 
-          playStartSound();
+                await RaceFirebase
+                  .activateRace();
 
-          window.setTimeout(
-            () => {
-              overlay.classList.add(
-                "hidden"
-              );
-            },
-            650
-          );
+                activateRace();
+              },
+              650
+            );
 
-          /*
-            PENTING:
-            Pelajar TIDAK panggil activateRace().
-            Status RUNNING hanya datang dari Firebase/guru.
-          */
+            return;
+          }
 
-          return;
-        }
-
-        const seconds =
-          Math.max(
-            1,
-            Math.ceil(
-              remaining / 1000
-            )
-          );
-
-        if (seconds !== lastShown) {
-          lastShown = seconds;
+          const seconds =
+            Math.max(
+              1,
+              Math.ceil(
+                remaining / 1000
+              )
+            );
 
           text.textContent =
             String(seconds);
 
           playCountdownSound();
-        }
 
-        window.requestAnimationFrame(
-          tick
-        );
-      };
+          window.setTimeout(
+            updateCountdown,
+            650
+          );
+        };
 
-      tick();
+      updateCountdown();
     }
 
 
     async function activateRace() {
-      if (
-        answeringLocked === false &&
-        currentQuestionIndex > 0
-      ) {
-        return;
-      }
-
       raceActivated =
         true;
 
