@@ -16,13 +16,13 @@ const AUDIO_BASE =
 
 const AUDIO_FILES = {
   countdown:
-    "countdown.wav",
+    "countdown.mp3",
 
   countdownBeep:
-    "countdown_beep.wav",
+    "countdown_beep.mp3",
 
   go:
-    "start_race.wav",
+    "start_race.mp3",
 
   correct:
     "correct.wav",
@@ -31,28 +31,28 @@ const AUDIO_FILES = {
     "wrong.wav",
 
   turbo:
-    "turbo.wav",
+    "turbo.mp3",
 
   brake:
-    "brake.wav",
+    "brake.mp3",
 
   engineIdle:
-    "engine_idle.wav",
+    "engine_idle.mp3",
 
   engineRace:
-    "engine_racing.wav",
+    "engine_racing.mp3",
 
   crowd:
-    "crowd.wav",
+    "crowd.mp3",
 
   notification:
-    "notification.wav",
+    "notification.mp3",
 
   click:
-    "click.wav",
+    "click.mp3",
 
   selectCar:
-    "select_car.wav"
+    "select_car.mp3"
 };
 
 
@@ -255,46 +255,18 @@ class C01RaceAudioEngine {
         const originalVolume =
           testAudio.volume;
 
-        testAudio.volume = 0;
+        testAudio.volume =
+          0;
+
         await testAudio.play();
+
         testAudio.pause();
-        testAudio.currentTime = 0;
-        testAudio.volume = originalVolume;
-      }
 
-      /* PRIME ENJIN SEMASA USER GESTURE
-         Penting untuk Chrome Mobile / Safari / iPhone / iPad */
-      const primeEngine =
-        this._makeAudio(
-          "engineRace",
-          {
-            loop: true,
-            volume: 0.18
-          }
-        );
+        testAudio.currentTime =
+          0;
 
-      if (primeEngine) {
-        try {
-          const originalEngineVolume =
-            primeEngine.volume;
-
-          primeEngine.volume = 0;
-          primeEngine.loop = true;
-          primeEngine.currentTime = 0;
-
-          await primeEngine.play();
-
-          primeEngine.pause();
-          primeEngine.currentTime = 0;
-          primeEngine.volume =
-            originalEngineVolume;
-
-        } catch (enginePrimeError) {
-          console.warn(
-            "Prime enjin gagal:",
-            enginePrimeError
-          );
-        }
+        testAudio.volume =
+          originalVolume;
       }
 
       this.unlocked =
@@ -722,7 +694,7 @@ class C01RaceAudioEngine {
 
   async startEngine({
     rpm = 75,
-    volume = 0.30
+    volume = 0.18
   } = {}) {
     if (
       !this.enabled
@@ -765,7 +737,7 @@ class C01RaceAudioEngine {
       Math.max(
         0.08,
         Math.min(
-          0.50,
+          0.35,
           volume
         )
       );
