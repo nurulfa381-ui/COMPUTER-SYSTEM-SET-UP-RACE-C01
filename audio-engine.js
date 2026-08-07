@@ -827,41 +827,12 @@ class C01RaceAudioEngine {
   playFinish() {
     this.stopEngine();
 
-    const crowd =
-      this._makeAudio(
-        "crowd",
-        {
-          loop: false,
-          volume: 0.85
-        }
-      );
-
-    if (crowd) {
-      try {
-        crowd.loop = false;
-        crowd.pause();
-        crowd.currentTime = 0;
-        crowd.volume = 0.85;
-
-        crowd.play().catch(() => {});
-
-        window.setTimeout(
-          () => {
-            try {
-              crowd.pause();
-              crowd.currentTime = 0;
-            } catch (error) {}
-          },
-          4000
-        );
-
-      } catch (error) {
-        console.warn(
-          "Sorakan tamat gagal dimainkan:",
-          error
-        );
+    this._play(
+      "crowd",
+      {
+        volume: 0.85
       }
-    }
+    );
 
     return this._play(
       "notification",
@@ -875,41 +846,12 @@ class C01RaceAudioEngine {
   playVictory() {
     this.stopEngine();
 
-    const crowd =
-      this._makeAudio(
-        "crowd",
-        {
-          loop: false,
-          volume: 0.9
-        }
-      );
-
-    if (crowd) {
-      try {
-        crowd.loop = false;
-        crowd.pause();
-        crowd.currentTime = 0;
-        crowd.volume = 0.9;
-
-        crowd.play().catch(() => {});
-
-        window.setTimeout(
-          () => {
-            try {
-              crowd.pause();
-              crowd.currentTime = 0;
-            } catch (error) {}
-          },
-          4000
-        );
-
-      } catch (error) {
-        console.warn(
-          "Sorakan kemenangan gagal dimainkan:",
-          error
-        );
+    this._play(
+      "crowd",
+      {
+        volume: 0.9
       }
-    }
+    );
 
     window.setTimeout(
       () => {
