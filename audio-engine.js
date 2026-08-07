@@ -16,13 +16,13 @@ const AUDIO_BASE =
 
 const AUDIO_FILES = {
   countdown:
-    "countdown.mp3",
+    "countdown.wav",
 
   countdownBeep:
-    "countdown_beep.mp3",
+    "countdown_beep.wav",
 
   go:
-    "start_race.mp3",
+    "start_race.wav",
 
   correct:
     "correct.wav",
@@ -31,28 +31,28 @@ const AUDIO_FILES = {
     "wrong.wav",
 
   turbo:
-    "turbo.mp3",
+    "turbo.wav",
 
   brake:
-    "brake.mp3",
+    "brake.wav",
 
   engineIdle:
-    "engine_idle.mp3",
+    "engine_idle.wav",
 
   engineRace:
-    "engine_racing.mp3",
+    "engine_racing.wav",
 
   crowd:
-    "crowd.mp3",
+    "crowd.wav",
 
   notification:
-    "notification.mp3",
+    "notification.wav",
 
   click:
-    "click.mp3",
+    "click.wav",
 
   selectCar:
-    "select_car.mp3"
+    "select_car.wav"
 };
 
 
