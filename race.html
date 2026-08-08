@@ -1104,7 +1104,7 @@
 
     import {
       RaceFirebase
-    } from "./race-firebase.js?v=20260806-firebase-audio-safe-1";
+    } from "./race-firebase.js?v=20260808-countdown-sync-locked-1";
 
     /* =========================================================
        AUDIO FALLBACK SELAMAT
@@ -1429,9 +1429,14 @@
 
       const updateCountdown =
         async () => {
+          const serverNow =
+            typeof RaceFirebase.getServerNow === "function"
+              ? RaceFirebase.getServerNow()
+              : Date.now();
+
           const remaining =
             Number(startTime || 0) -
-            Date.now();
+            serverNow;
 
           if (
             remaining <= 0
@@ -1447,9 +1452,10 @@
                   "hidden"
                 );
 
-                await RaceFirebase
-                  .activateRace();
-
+                /*
+                  Status global RUNNING dikawal oleh guru/Firebase.
+                  Pelajar hanya memulakan paparan race secara lokal.
+                */
                 activateRace();
               },
               650
@@ -2308,6 +2314,20 @@
 
     function playVictorySound() {
       RaceAudio.playVictory();
+
+      window.setTimeout(
+        () => {
+          try {
+            RaceAudio.stopAll();
+          } catch (error) {
+            console.warn(
+              "Audio kemenangan gagal dihentikan:",
+              error
+            );
+          }
+        },
+        3000
+      );
     }
 
 
