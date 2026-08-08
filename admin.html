@@ -74,6 +74,24 @@
     }
   </style>
 
+
+  <style>
+    .ranking-panel{margin-top:18px}
+    .ranking-list{display:grid;gap:10px}
+    .ranking-row{display:grid;grid-template-columns:56px 1.4fr .8fr .8fr .8fr;gap:10px;align-items:center;padding:14px 16px;border:2px solid #334155;border-radius:14px;background:rgba(7,28,46,.78)}
+    .ranking-place{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#1e293b;font-weight:900}
+    .rank-1 .ranking-place{background:#fbbf24;color:#111827}
+    .rank-2 .ranking-place{background:#cbd5e1;color:#111827}
+    .rank-3 .ranking-place{background:#d97706;color:#fff}
+    .ranking-name{font-weight:900}
+    .ranking-meta{color:#cbd5e1;font-size:.9rem}
+    .ranking-value{font-weight:800;text-align:center}
+    @media(max-width:760px){
+      .ranking-row{grid-template-columns:48px 1fr}
+      .ranking-value{grid-column:2;text-align:left}
+    }
+  </style>
+
 </head>
 
 <body>
@@ -701,6 +719,26 @@
 
     </section>
 
+
+    <section class="panel ranking-panel">
+      <div class="section-header">
+        <div>
+          <p class="eyebrow">FINAL RANKING</p>
+          <h2>🏆 KEDUDUKAN PERLUMBAAN</h2>
+        </div>
+        <span id="rankingStatus" class="connection-badge">MENUNGGU</span>
+      </div>
+      <div id="adminRankingList" class="ranking-list">
+        <div class="ranking-row">
+          <div class="ranking-place">–</div>
+          <div>
+            <div class="ranking-name">Belum ada keputusan</div>
+            <div class="ranking-meta">Ranking akan dikemas kini secara langsung.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
 
@@ -844,6 +882,82 @@
     type="module"
     src="admin.js?v=20260805-admin-firebase-2"
   ></script>
+
+
+  <script type="module">
+    import { RaceFirebase } from "./race-firebase.js?v=20260808-ranking-safe-1";
+
+    const rankingList = document.getElementById("adminRankingList");
+    const rankingStatus = document.getElementById("rankingStatus");
+
+    function esc(v){
+      return String(v ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;");
+    }
+
+    function sortPlayers(items){
+      return [...items].sort((a,b)=>{
+        const af = a.raceStatus==="FINISHED" || Number(a.progress||0)>=100;
+        const bf = b.raceStatus==="FINISHED" || Number(b.progress||0)>=100;
+
+        if(af && bf){
+          return Number(a.finishTime||Number.MAX_SAFE_INTEGER) - Number(b.finishTime||Number.MAX_SAFE_INTEGER);
+        }
+        if(af !== bf) return af ? -1 : 1;
+
+        const pd = Number(b.progress||0) - Number(a.progress||0);
+        if(pd !== 0) return pd;
+
+        const sd = Number(b.score||0) - Number(a.score||0);
+        if(sd !== 0) return sd;
+
+        return Number(b.correctAnswers||0) - Number(a.correctAnswers||0);
+      });
+    }
+
+    function render(players){
+      const ranked = sortPlayers(
+        players.filter(p => p.approved===true || p.raceStatus==="FINISHED" || Number(p.progress||0)>0)
+      ).slice(0,5);
+
+      if(!ranked.length){
+        rankingStatus.textContent="MENUNGGU";
+        return;
+      }
+
+      rankingStatus.textContent = ranked.every(p => p.raceStatus==="FINISHED" || Number(p.progress||0)>=100)
+        ? "KEPUTUSAN AKHIR"
+        : "LIVE";
+
+      rankingList.innerHTML = ranked.map((p,i)=>{
+        const place=i+1;
+        const medal=place===1?"🥇":place===2?"🥈":place===3?"🥉":place;
+        const status=(p.raceStatus==="FINISHED" || Number(p.progress||0)>=100)?"TAMAT":"BERLUMBA";
+
+        return `
+          <div class="ranking-row rank-${place}">
+            <div class="ranking-place">${medal}</div>
+            <div>
+              <div class="ranking-name">${esc(p.name||"Pelajar")}</div>
+              <div class="ranking-meta">ID: ${esc(p.studentId||"-")} • ${status}</div>
+            </div>
+            <div class="ranking-value">${Number(p.score||0)}%<br><span class="ranking-meta">Markah</span></div>
+            <div class="ranking-value">${Number(p.progress||0)}%<br><span class="ranking-meta">Progress</span></div>
+            <div class="ranking-value">${Number(p.correctAnswers||0)} betul<br><span class="ranking-meta">Jawapan</span></div>
+          </div>`;
+      }).join("");
+    }
+
+    try{
+      await RaceFirebase.initialiseRaceFirebase();
+      RaceFirebase.listenToPlayers(render, err => console.warn("Ranking guru gagal:", err));
+    }catch(err){
+      console.warn("Ranking guru gagal dimulakan:", err);
+    }
+  </script>
 
 </body>
 </html>

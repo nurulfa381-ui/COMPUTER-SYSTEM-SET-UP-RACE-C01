@@ -836,6 +836,19 @@
         height: 38px;
       }
     }
+
+    .final-ranking-panel{margin-top:14px;padding:20px;border:2px solid var(--race-border);border-radius:22px;background:linear-gradient(145deg,var(--race-panel-light),var(--race-panel));box-shadow:0 20px 60px rgba(0,0,0,.38)}
+    .final-ranking-list{display:grid;gap:9px;margin-top:12px}
+    .final-ranking-row{display:grid;grid-template-columns:48px 1fr 85px 85px;gap:9px;align-items:center;padding:11px 12px;border:2px solid var(--race-border);border-radius:13px;background:rgba(7,28,46,.78)}
+    .final-ranking-row.me{border-color:var(--race-orange);box-shadow:0 0 0 2px rgba(251,191,36,.15)}
+    .final-ranking-place{font-weight:900;font-size:1.1rem;text-align:center}
+    .final-ranking-name{font-weight:900}
+    .final-ranking-small{color:var(--race-muted);font-size:.78rem}
+    @media(max-width:760px){
+      .final-ranking-row{grid-template-columns:42px 1fr}
+      .final-ranking-stat{grid-column:2}
+    }
+
   </style>
 </head>
 
@@ -1022,6 +1035,13 @@
               Menunggu arahan guru...
             </p>
 
+          </article>
+
+
+          <article id="finalRankingPanel" class="final-ranking-panel hidden">
+            <p class="eyebrow">KEPUTUSAN PERLUMBAAN</p>
+            <h2>🏆 RANKING AKHIR</h2>
+            <div id="finalRankingList" class="final-ranking-list"></div>
           </article>
 
         </aside>
@@ -1228,6 +1248,7 @@
               incomingPlayers;
 
             renderTrackCars();
+            renderFinalRanking();
           },
 
           error => {
@@ -1892,6 +1913,7 @@
         "🏁 Anda telah tamat perlumbaan!"
       );
 
+      renderFinalRanking();
       playVictorySound();
     }
 
@@ -2083,6 +2105,61 @@
         );
     }
 
+
+
+    function sortRankingPlayers(items) {
+      return [...items].sort((a,b)=>{
+        const af = a.raceStatus === "FINISHED" || Number(a.progress||0) >= 100;
+        const bf = b.raceStatus === "FINISHED" || Number(b.progress||0) >= 100;
+
+        if (af && bf) {
+          return Number(a.finishTime||Number.MAX_SAFE_INTEGER) - Number(b.finishTime||Number.MAX_SAFE_INTEGER);
+        }
+        if (af !== bf) return af ? -1 : 1;
+
+        const pd = Number(b.progress||0) - Number(a.progress||0);
+        if (pd !== 0) return pd;
+
+        const sd = Number(b.score||0) - Number(a.score||0);
+        if (sd !== 0) return sd;
+
+        return Number(b.correctAnswers||0) - Number(a.correctAnswers||0);
+      });
+    }
+
+    function renderFinalRanking() {
+      const panel = document.getElementById("finalRankingPanel");
+      const list = document.getElementById("finalRankingList");
+
+      if (!panel || !list) return;
+
+      const ranked = sortRankingPlayers(
+        players.filter(
+          p => p.approved === true || p.raceStatus === "FINISHED" || Number(p.progress||0) > 0
+        )
+      ).slice(0,5);
+
+      if (!ranked.length) return;
+
+      panel.classList.remove("hidden");
+
+      list.innerHTML = ranked.map((p,i)=>{
+        const place = i+1;
+        const medal = place===1 ? "🥇" : place===2 ? "🥈" : place===3 ? "🥉" : String(place);
+        const me = p.uid === playerProfile?.uid || p.studentId === playerProfile?.studentId;
+
+        return `
+          <div class="final-ranking-row ${me ? "me" : ""}">
+            <div class="final-ranking-place">${medal}</div>
+            <div>
+              <div class="final-ranking-name">${escapeHtml(p.name || "Pelajar")}</div>
+              <div class="final-ranking-small">${(p.raceStatus==="FINISHED" || Number(p.progress||0)>=100) ? "TAMAT" : "BERLUMBA"}</div>
+            </div>
+            <div class="final-ranking-stat"><strong>${Number(p.score||0)}%</strong><div class="final-ranking-small">Markah</div></div>
+            <div class="final-ranking-stat"><strong>${Number(p.progress||0)}%</strong><div class="final-ranking-small">Progress</div></div>
+          </div>`;
+      }).join("");
+    }
 
     function updatePlayerStatistics(
       player
