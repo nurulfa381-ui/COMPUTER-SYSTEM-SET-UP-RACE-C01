@@ -235,89 +235,67 @@
 
     .race-track {
       position: relative;
-
-      min-height: 680px;
-
+      min-height: 760px;
       overflow: hidden;
-
-      border:
-        5px solid
-        #94a3b8;
-
-      border-radius: 30px;
-
+      border: 5px solid #94a3b8;
+      border-radius: 26px;
       background:
         linear-gradient(
-          180deg,
-          rgba(125, 211, 252, 0.28),
-          rgba(15, 23, 42, 0.04) 30%
-        ),
-        radial-gradient(
-          ellipse at center,
-          #30343a 0 36%,
-          #111827 37% 51%,
-          #166534 52% 100%
+          90deg,
+          #166534 0 4%,
+          #30343a 4% 96%,
+          #166534 96% 100%
         );
-
       box-shadow:
-        inset 0 0 80px
-        rgba(0, 0, 0, 0.62);
+        inset 0 0 80px rgba(0,0,0,0.62);
     }
 
     .race-track::before {
       content: "";
-
       position: absolute;
-      inset: 12% 9%;
-
-      border:
-        15px dashed
-        rgba(255, 255, 255, 0.78);
-
-      border-radius: 50%;
+      inset: 7% 7% 8% 7%;
+      border-left: 4px solid rgba(255,255,255,0.9);
+      border-right: 4px solid rgba(255,255,255,0.9);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0 calc(20% - 2px),
+          rgba(255,255,255,0.72) calc(20% - 2px) calc(20% + 2px)
+        );
+      pointer-events: none;
     }
 
     .race-track::after {
-      content: "";
-
+      content: "START";
       position: absolute;
-
-      left: 50%;
-      top: 6%;
-
-      width: 100px;
-      height: 88%;
-
-      transform:
-        translateX(-50%);
-
+      left: 7%;
+      right: 7%;
+      bottom: 4%;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-top: 4px solid #fff;
+      border-bottom: 4px solid #fff;
+      color: #111827;
       background:
         repeating-linear-gradient(
-          0deg,
+          90deg,
           #ffffff 0 22px,
           #111827 22px 44px
         );
-
-      opacity: 0.95;
+      font-weight: 900;
+      letter-spacing: 0.18em;
     }
 
     .grandstand {
       position: absolute;
       z-index: 1;
-
-      left: 5%;
-      right: 5%;
-      top: 3%;
-
-      height: 52px;
-
-      border:
-        3px solid
-        #64748b;
-
-      border-radius:
-        16px 16px 6px 6px;
-
+      left: 7%;
+      right: 7%;
+      top: 1.5%;
+      height: 40px;
+      border: 3px solid #64748b;
+      border-radius: 12px;
       background:
         repeating-linear-gradient(
           90deg,
@@ -325,55 +303,37 @@
           #3b82f6 18px 36px,
           #fbbf24 36px 54px
         );
-
       opacity: 0.85;
     }
 
     .pit-lane {
       position: absolute;
       z-index: 2;
-
-      left: 11%;
-      bottom: 8%;
-
-      width: 45%;
-      height: 54px;
-
-      border:
-        3px solid
-        #94a3b8;
-
-      border-radius: 10px;
-
+      right: 1.5%;
+      top: 12%;
+      width: 4%;
+      height: 74%;
+      border: 2px solid #94a3b8;
+      border-radius: 8px;
       background:
         repeating-linear-gradient(
-          90deg,
-          #334155 0 70px,
-          #475569 70px 140px
+          0deg,
+          #334155 0 46px,
+          #475569 46px 92px
         );
     }
 
     .finish-label {
       position: absolute;
       z-index: 5;
-
       left: 50%;
-      top: 4%;
-
-      transform:
-        translateX(-50%);
-
-      padding: 8px 13px;
-
-      border:
-        2px solid
-        #ffffff;
-
+      top: 4.5%;
+      transform: translateX(-50%);
+      padding: 8px 16px;
+      border: 2px solid #ffffff;
       border-radius: 999px;
-
       color: #111827;
       background: var(--race-orange);
-
       font-weight: 900;
     }
 
@@ -469,21 +429,18 @@
 
     .speed-effect {
       position: absolute;
-
-      right: 84%;
-
-      width: 80px;
-      height: 6px;
-
+      left: 50%;
+      top: 72%;
+      width: 6px;
+      height: 78px;
+      transform: translateX(-50%);
       border-radius: 999px;
-
       background:
         linear-gradient(
-          90deg,
-          transparent,
-          rgba(255,255,255,0.85)
+          180deg,
+          rgba(255,255,255,0.85),
+          transparent
         );
-
       opacity: 0;
     }
 
@@ -498,9 +455,13 @@
 
     @keyframes speedTrail {
       from {
-        transform:
-          translateX(0);
+        transform: translate(-50%, 0);
       }
+
+      to {
+        transform: translate(-50%, 24px);
+      }
+    }
 
       to {
         transform:
@@ -845,7 +806,7 @@
       }
 
       .race-track {
-        min-height: 430px;
+        min-height: 620px;
       }
 
       .track-car {
@@ -2041,39 +2002,38 @@
             }
 
             const playerProgress =
-              Number(
-                player.progress || 0
+              Math.max(
+                0,
+                Math.min(
+                  100,
+                  Number(
+                    player.progress || 0
+                  )
+                )
               );
 
-            const angle =
+            const laneCenters = [
+              15,
+              32.5,
+              50,
+              67.5,
+              85
+            ];
+
+            const left =
+              laneCenters[index] || 50;
+
+            /*
+              START di bawah sekitar 88%.
+              FINISH di atas sekitar 10%.
+            */
+            const top =
+              88 -
               (
                 playerProgress /
                 100
               ) *
-              Math.PI *
-              2;
-
-            const centerX =
-              50;
-
-            const centerY =
-              50;
-
-            const radiusX =
-              37;
-
-            const radiusY =
-              32;
-
-            const left =
-              centerX +
-              Math.cos(angle) *
-              radiusX;
-
-            const top =
-              centerY +
-              Math.sin(angle) *
-              radiusY;
+              78;
 
             car.style.left =
               `${left}%`;
